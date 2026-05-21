@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/emre-cevik1/gorevlab/main/GorevTakipSistemi/wwwroot/favicon.ico" width="80" alt="GorevLab Logo" />
   <h1>GorevLab.</h1>
   <p>Modern, Güvenli ve Tam Otomatik Görev Yönetim Sistemi</p>
 </div>
