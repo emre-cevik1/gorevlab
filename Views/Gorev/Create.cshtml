@@ -22,6 +22,29 @@
                             <input asp-for="GorevAdi" class="antigravity-input form-control form-control-lg text-slate-800 placeholder-slate-400 py-3" placeholder="Örn: Sunum dosyasını hazırla..." required />
                         </div>
 
+                        @if (ViewBag.EkipUyeleri != null)
+                        {
+                            <div class="mb-4">
+                                <label class="form-label font-bold text-slate-800">Kime Atanacak?</label>
+                                <select name="atananKullaniciId" class="antigravity-input form-select form-select-lg text-slate-800 py-3">
+                                    @{
+                                        var currentId = Context.Session.GetInt32("KullaniciId");
+                                        foreach (var uye in ViewBag.EkipUyeleri)
+                                        {
+                                            if (uye.Id == currentId)
+                                            {
+                                                <option value="@uye.Id" selected>Bana (@uye.Ad @uye.Soyad)</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@uye.Id">@uye.Ad @uye.Soyad</option>
+                                            }
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        }
+
                         <div class="mb-4">
                             <label asp-for="Aciklama" class="form-label font-bold text-slate-800">Görev Detayları</label>
                             <textarea asp-for="Aciklama" class="antigravity-input form-control text-slate-800 placeholder-slate-400 py-3" rows="4" placeholder="Görev ile ilgili notlarınızı buraya yazabilirsiniz..."></textarea>

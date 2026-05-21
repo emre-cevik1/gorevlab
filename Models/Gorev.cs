@@ -19,11 +19,15 @@ namespace GorevTakipSistemi.Models
         
         public bool DurumAktifMi { get; set; } = true; // True: Aktif/Bekleyen, False: Tamamlandı
         
-        // Bu görev hangi kullanıcıya ait? (İlişkisel Veritabanı Mantığı)
+        // Bu görev hangi kullanıcıya ait? (Kime atandı?)
         public int KullaniciId { get; set; }
         public virtual Kullanici? Kullanici { get; set; }
-        // Gorev.cs içine eklenecek yeni satırlar:
-public int? EkipId { get; set; }
-public virtual Ekip Ekip { get; set; }
+        
+        // Bu görevi kim atadı? (Null ise kendisi atamıştır)
+        public int? AtayanKullaniciId { get; set; }
+        public virtual Kullanici? AtayanKullanici { get; set; }
+
+        public int? EkipId { get; set; }
+        public virtual Ekip Ekip { get; set; }
     }
 }

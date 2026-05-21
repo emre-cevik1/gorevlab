@@ -95,6 +95,19 @@
                                         <span class="text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded flex items-center gap-1 font-bold"><i class="bi bi-arrow-down-short"></i> Düşük</span>
                                     }
                                     
+                                    @if(item.AtayanKullaniciId != null && item.AtayanKullaniciId != item.KullaniciId && item.KullaniciId == Context.Session.GetInt32("KullaniciId") && item.AtayanKullanici != null)
+                                    {
+                                        <span class="text-purple-600 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded flex items-center gap-1 font-bold" title="Görevlendiren">
+                                            <i class="bi bi-person-badge"></i> @item.AtayanKullanici.Ad atadı
+                                        </span>
+                                    }
+                                    @if(item.Kullanici != null && item.KullaniciId != Context.Session.GetInt32("KullaniciId"))
+                                    {
+                                        <span class="text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded flex items-center gap-1 font-bold" title="Görevlendirilen">
+                                            <i class="bi bi-person-fill"></i> Atanan: @item.Kullanici.Ad
+                                        </span>
+                                    }
+
                                     <span class="text-slate-600 font-medium flex items-center gap-1">
                                         <i class="bi bi-calendar3"></i> @item.Tarih.ToString("dd MMM yyyy")
                                     </span>

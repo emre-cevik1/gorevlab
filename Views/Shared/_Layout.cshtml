@@ -142,6 +142,26 @@
                                 </a>
                             }
 
+                            <!-- Notifications -->
+                            <div class="relative hidden md:block">
+                                <button id="notification-btn" class="flex items-center justify-center w-10 h-10 text-slate-500 hover:text-indigo-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-full transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1">
+                                    <i class="fa-solid fa-bell text-lg"></i>
+                                    <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm hidden border border-white">0</span>
+                                </button>
+
+                                <!-- Dropdown -->
+                                <div id="notification-dropdown" class="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 opacity-0 invisible transform translate-y-2 transition-all duration-300 z-50 overflow-hidden">
+                                    <div class="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                        <h3 class="text-sm font-bold text-slate-800 m-0">Bildirimler</h3>
+                                        <button onclick="tumunuOkunduIsaretle()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 border-0 bg-transparent cursor-pointer p-0">Tümünü Okundu İşaretle</button>
+                                    </div>
+                                    <div id="notification-list" class="max-h-80 overflow-y-auto">
+                                        <!-- AJAX ile dolacak -->
+                                        <div class="p-4 text-center text-slate-500 text-sm">Yükleniyor...</div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Profile -->
                             <a asp-controller="Home" asp-action="Profil" class="hidden md:flex items-center gap-2 pl-2 pr-4 py-1.5 bg-white border border-slate-200 text-sm font-bold text-slate-700 hover:border-indigo-300 rounded-full transition-all duration-300 no-underline shadow-sm hover:shadow-lg hover:-translate-y-1">
                                 <div class="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-inner">
@@ -300,7 +320,85 @@
                 }
             });
         }
+        }
     </script>
+
+    <script>
+        $(document).ready(function () {
+            // Bildirim dropdown aç/kapa
+            $('#notification-btn').click(function(e) {
+                e.stopPropagation();
+                let dropdown = $('#notification-dropdown');
+                if (dropdown.hasClass('opacity-0')) {
+                    dropdown.removeClass('opacity-0 invisible translate-y-2').addClass('opacity-100 visible translate-y-0');
+                    bildirimleriGetir();
+                } else {
+                    dropdown.addClass('opacity-0 invisible translate-y-2').removeClass('opacity-100 visible translate-y-0');
+                }
+            });
+
+            // Sayfa tıklandığında dropdown kapat
+            $(document).click(function(e) {
+                if (!$(e.target).closest('#notification-btn, #notification-dropdown').length) {
+                    $('#notification-dropdown').addClass('opacity-0 invisible translate-y-2').removeClass('opacity-100 visible translate-y-0');
+                }
+            });
+
+            // İlk yüklemede ve 30 saniyede bir bildirim sayısını getir
+            bildirimSayisiniGetir();
+            setInterval(bildirimSayisiniGetir, 30000);
+        });
+
+        function bildirimSayisiniGetir() {
+            $.get('/Bildirim/Getir', function(data) {
+                if (data && data.sayi > 0) {
+                    $('#notification-badge').text(data.sayi).removeClass('hidden');
+                } else {
+                    $('#notification-badge').addClass('hidden');
+                }
+            });
+        }
+
+        function bildirimleriGetir() {
+            $.get('/Bildirim/Getir', function(data) {
+                let html = '';
+                if (!data || data.liste.length === 0) {
+                    html = '<div class="p-6 text-center text-slate-500 text-sm"><i class="bi bi-bell-slash text-3xl text-slate-200 mb-2 block"></i><br>Yeni bildiriminiz yok.</div>';
+                } else {
+                    data.liste.forEach(function(b) {
+                        let bgClass = b.okunduMu ? 'bg-white' : 'bg-indigo-50/50';
+                        let dot = b.okunduMu ? '' : '<div class="w-2 h-2 rounded-full bg-indigo-600 mt-1.5 shrink-0"></div>';
+                        html += `
+                            <a href="${b.url}" onclick="bildirimOkundu(${b.id})" class="flex gap-3 p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors no-underline ${bgClass}">
+                                ${dot}
+                                <div>
+                                    <p class="text-sm text-slate-800 m-0 font-medium">${b.mesaj}</p>
+                                    <span class="text-[11px] text-slate-500 mt-1 block"><i class="bi bi-clock"></i> ${b.sure}</span>
+                                </div>
+                            </a>
+                        `;
+                    });
+                }
+                $('#notification-list').html(html);
+                if (data && data.sayi > 0) {
+                    $('#notification-badge').text(data.sayi).removeClass('hidden');
+                } else {
+                    $('#notification-badge').addClass('hidden');
+                }
+            });
+        }
+
+        function bildirimOkundu(id) {
+            $.post('/Bildirim/OkunduIsaretle', { id: id });
+        }
+
+        function tumunuOkunduIsaretle() {
+            $.post('/Bildirim/TumunuOkunduIsaretle', function() {
+                bildirimleriGetir();
+            });
+        }
+    </script>
+
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

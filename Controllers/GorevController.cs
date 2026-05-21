@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using System.Text.RegularExpressions;   
 using System;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace GorevTakipSistemi.Controllers
 {
@@ -24,8 +25,11 @@ namespace GorevTakipSistemi.Controllers
         {
             int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
 
-            // Sadece bu kullanıcıya ait görevleri çekiyoruz
-            var query = _context.Gorevler.Where(g => g.KullaniciId == kullaniciId);
+            // Sadece bu kullanıcıya ait VEYA bu kullanıcının atadığı görevleri çekiyoruz
+            var query = _context.Gorevler
+                                .Include(g => g.Kullanici)
+                                .Include(g => g.AtayanKullanici)
+                                .Where(g => g.KullaniciId == kullaniciId || g.AtayanKullaniciId == kullaniciId);
 
             // Arama kutusu doluysa isme göre filtrele (Madde 7)
             if (!string.IsNullOrEmpty(arama))
@@ -47,7 +51,9 @@ namespace GorevTakipSistemi.Controllers
             int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
 
             var gorevler = _context.Gorevler
-                                   .Where(g => g.KullaniciId == kullaniciId && 
+                                   .Include(g => g.Kullanici)
+                                   .Include(g => g.AtayanKullanici)
+                                   .Where(g => (g.KullaniciId == kullaniciId || g.AtayanKullaniciId == kullaniciId) && 
                                                g.DurumAktifMi == true && 
                                                g.Tarih <= DateTime.Now)
                                    .OrderBy(g => g.Tarih)
@@ -62,7 +68,9 @@ namespace GorevTakipSistemi.Controllers
             int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
             
             var gorevler = _context.Gorevler
-                                   .Where(g => g.KullaniciId == kullaniciId && g.DurumAktifMi == false)
+                                   .Include(g => g.Kullanici)
+                                   .Include(g => g.AtayanKullanici)
+                                   .Where(g => (g.KullaniciId == kullaniciId || g.AtayanKullaniciId == kullaniciId) && g.DurumAktifMi == false)
                                    .OrderByDescending(g => g.Tarih)
                                    .ToList();
 
@@ -75,7 +83,9 @@ namespace GorevTakipSistemi.Controllers
             int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
             
             var gorevler = _context.Gorevler
-                                   .Where(g => g.KullaniciId == kullaniciId && 
+                                   .Include(g => g.Kullanici)
+                                   .Include(g => g.AtayanKullanici)
+                                   .Where(g => (g.KullaniciId == kullaniciId || g.AtayanKullaniciId == kullaniciId) && 
                                                g.DurumAktifMi == true && 
                                                g.Tarih > DateTime.Now)
                                    .OrderBy(g => g.Tarih)
@@ -87,12 +97,31 @@ namespace GorevTakipSistemi.Controllers
         // --- 5. YENİ GÖREV EKLEME EKRANI (GET) ---
         public IActionResult Create()
         {
+            int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
+            
+            // Kullanıcının ait olduğu veya kurduğu ekibi bul
+            var ekip = _context.Ekipler.FirstOrDefault(e => e.KurucuId == kullaniciId || _context.EkipUyeleri.Any(eu => eu.EkipId == e.Id && eu.KullaniciId == kullaniciId));
+            
+            if (ekip != null)
+            {
+                var uyeler = _context.EkipUyeleri
+                                     .Where(eu => eu.EkipId == ekip.Id && eu.Durum == "KabulEdildi")
+                                     .Select(eu => eu.Kullanici)
+                                     .ToList();
+                
+                var kurucu = _context.Kullanicilar.Find(ekip.KurucuId);
+                if (kurucu != null && !uyeler.Any(u => u.Id == kurucu.Id)) uyeler.Add(kurucu);
+
+                ViewBag.EkipUyeleri = uyeler;
+                ViewBag.EkipId = ekip.Id;
+            }
+
             return View();
         }
 
         // --- 6. YENİ GÖREV EKLEME İŞLEMİ (POST) ---
         [HttpPost]
-        public IActionResult Create(Gorev gorev)
+        public IActionResult Create(Gorev gorev, int atananKullaniciId)
         {
             string zararliKodDeseni = @"<[^>]+>"; 
             if (Regex.IsMatch(gorev.GorevAdi ?? "", zararliKodDeseni) || Regex.IsMatch(gorev.Aciklama ?? "", zararliKodDeseni))
@@ -101,10 +130,37 @@ namespace GorevTakipSistemi.Controllers
                 return View(gorev);
             }
 
-            gorev.KullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
+            int me = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
+            
+            if (atananKullaniciId > 0)
+            {
+                gorev.KullaniciId = atananKullaniciId;
+                if (atananKullaniciId != me) 
+                {
+                    gorev.AtayanKullaniciId = me;
+                }
+            }
+            else
+            {
+                gorev.KullaniciId = me;
+            }
+
             gorev.DurumAktifMi = true; // Yeni görev eklendiğinde aktiftir
             
             _context.Gorevler.Add(gorev);
+            _context.SaveChanges();
+
+            // Eğer başkasına atandıysa BİLDİRİM GÖNDER
+            if (gorev.KullaniciId != me)
+            {
+                string adSoyad = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Biri";
+                _context.Bildirimler.Add(new Bildirim {
+                    KullaniciId = gorev.KullaniciId,
+                    Mesaj = $"{adSoyad} sana '{gorev.GorevAdi}' görevini atadı.",
+                    Url = $"/Gorev/Details/{gorev.Id}"
+                });
+                _context.SaveChanges();
+            }
 
             // LOG SİSTEMİ
             _context.SistemLoglari.Add(new SistemLog {

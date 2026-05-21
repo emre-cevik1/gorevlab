@@ -11,6 +11,7 @@ namespace GorevTakipSistemi.Data
         public DbSet<Gorev> Gorevler { get; set; }
         public DbSet<DestekMesaji> DestekMesajlari { get; set; }
         public DbSet<SistemLog> SistemLoglari { get; set; }
+        public DbSet<Bildirim> Bildirimler { get; set; }
         
         // YENİ EKLENEN EKİP TABLOLARI
         public DbSet<Ekip> Ekipler { get; set; }
@@ -23,6 +24,13 @@ namespace GorevTakipSistemi.Data
 
             // 🛡️ SQL HATALARINI ÖNLEYEN SENIOR DOKUNUŞU (CASCADE KORUMALARI)
             
+            // Gorev -> AtayanKullanici ilişkisi (Cascade çakışmasını önlemek için Restrict yapıyoruz)
+            modelBuilder.Entity<Gorev>()
+                .HasOne(g => g.AtayanKullanici)
+                .WithMany()
+                .HasForeignKey(g => g.AtayanKullaniciId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // EkipDavet -> Gonderen ilişkisi
             modelBuilder.Entity<EkipDavet>()
                 .HasOne(d => d.Gonderen)
