@@ -12,6 +12,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 
 // Add services to the container.
+builder.Services.AddDataProtection();
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new GorevTakipSistemi.Filters.BakimModuFilter());

@@ -22,14 +22,43 @@
             }
         </div>
         
-        <form class="mt-8 space-y-6" asp-action="Login" method="post">
+        @if (ViewBag.HizliGirisUser != null)
+        {
+            var hizliUser = (GorevTakipSistemi.Models.Kullanici)ViewBag.HizliGirisUser;
+            var kelimeler = (hizliUser.Ad + " " + hizliUser.Soyad).Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var basHarfler = kelimeler.Length >= 2 ? kelimeler[0].Substring(0, 1).ToUpper() + kelimeler[kelimeler.Length - 1].Substring(0, 1).ToUpper() : kelimeler[0].Substring(0, 1).ToUpper();
+
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center shadow-inner mb-6">
+                <div class="h-16 w-16 mx-auto rounded-full bg-gradient-to-r from-[#3B8AC4] to-[#345DA7] text-white flex items-center justify-center font-bold text-xl shadow-lg mb-4">
+                    @basHarfler
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">@hizliUser.Ad @hizliUser.Soyad</h3>
+                <p class="text-sm text-slate-500 mb-6">@@@hizliUser.KullaniciAdi</p>
+                
+                <form asp-action="LoginHizli" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-[#3B8AC4] to-[#345DA7] text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300">
+                        Devam Et
+                    </button>
+                </form>
+                
+                <div class="mt-4">
+                    <button onclick="document.cookie='GorevLabRememberToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; window.location.reload();" class="text-sm font-semibold text-slate-500 hover:text-slate-700 transition-colors">
+                        Farklı bir hesapla giriş yap
+                    </button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <form class="mt-8 space-y-6" asp-action="Login" method="post">
             
             @Html.AntiForgeryToken()
             
             <div class="rounded-md space-y-4">
                 <div class="mb-4">
                     <label class="form-label font-bold text-slate-700 block mb-1">Kullanıcı Adı</label>
-                    <input id="kullaniciAdiInput" name="kullaniciAdi" type="text" value="@ViewBag.HatirlananKullanici" required class="antigravity-input w-full py-3 text-slate-800 placeholder-slate-400" placeholder="Kullanıcı adınızı girin">
+                    <input id="kullaniciAdiInput" name="kullaniciAdi" type="text" required class="antigravity-input w-full py-3 text-slate-800 placeholder-slate-400" placeholder="Kullanıcı adınızı girin">
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1">Şifre</label>
@@ -38,9 +67,9 @@
             </div>
 
             <div class="flex items-center mt-2 mb-4">
-                <input type="checkbox" id="BeniHatirla" name="BeniHatirla" value="true" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" @(string.IsNullOrEmpty((string)ViewBag.HatirlananKullanici) ? "" : "checked")>
+                <input type="checkbox" id="BeniHatirla" name="BeniHatirla" value="true" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" checked>
                 <label for="BeniHatirla" class="ml-2 block text-sm text-slate-700 font-semibold cursor-pointer">
-                    Beni Hatırla
+                    Beni 10 Gün Boyunca Hatırla
                 </label>
             </div>
 
@@ -59,6 +88,7 @@
                 </button>
             </div>
         </form>
+        }
 
         <div class="text-center mt-4">
             <p class="text-sm text-slate-600">
