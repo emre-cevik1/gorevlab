@@ -1,0 +1,198 @@
+@model List<GorevTakipSistemi.Models.Gorev>
+@{
+    ViewData["Title"] = "Ana Sayfa";
+
+    // Görevleri mantıklı şekilde ikiye bölüyoruz (EkipId'si null olan bireysel görevler)
+    var gunlukGorevler = Model?.Where(g => g.Tarih.Date == DateTime.Today.Date).ToList() ?? new List<GorevTakipSistemi.Models.Gorev>();
+    var aktifGorevler = Model?.Where(g => g.DurumAktifMi && g.Tarih.Date != DateTime.Today.Date).ToList() ?? new List<GorevTakipSistemi.Models.Gorev>();
+    var ekipGorevleri = ViewBag.EkipGorevleri as List<GorevTakipSistemi.Models.Gorev> ?? new List<GorevTakipSistemi.Models.Gorev>();
+}
+
+<div class="max-w-7xl mx-auto mt-6 px-4">
+
+    <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">Hoş geldiniz! 👋</h1>
+            <p class="text-slate-600 text-sm mt-1">İşte bugünün görev ve takım özeti.</p>
+        </div>
+        <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+            <a asp-controller="Ekip" asp-action="Index" class="bg-white/60 backdrop-blur-md hover:bg-white shadow-sm hover:shadow-md rounded-full px-5 py-2.5 transition-all hover:-translate-y-1 inline-flex items-center justify-center gap-2 text-slate-800 font-bold text-sm no-underline w-full sm:w-auto border border-white/50">
+                <i class="bi bi-people-fill text-lg text-[#3B8AC4]"></i> Ekip Çalışmalarım
+            </a>
+            <a asp-controller="Gorev" asp-action="Create" class="antigravity-btn inline-flex items-center justify-center gap-2 font-bold text-sm px-6 py-2.5 w-full sm:w-auto no-underline">
+                <i class="bi bi-plus-lg text-lg"></i> Yeni Bireysel Görev
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+        <a asp-controller="Gorev" asp-action="Aktifler" class="relative overflow-hidden antigravity-card p-6 cursor-pointer no-underline group flex flex-col justify-between h-32 hover:scale-101 hover:-translate-y-1 transition-all">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-indigo-50 rounded-full group-hover:scale-150 transition-transform duration-700 ease-out z-0"></div>
+            <div class="relative z-10 flex justify-between items-start">
+                <div>
+                    <h4 class="text-sm text-slate-500 font-bold group-hover:text-indigo-600 transition-colors">Aktif Görevler</h4>
+                    <p class="text-4xl font-black text-slate-800 mt-2">@(ViewBag.AktifSayisi ?? 0)</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shadow-inner border border-indigo-100"><i class="bi bi-activity"></i></div>
+            </div>
+        </a>
+        
+        <a asp-controller="Gorev" asp-action="Tamamlananlar" class="relative overflow-hidden antigravity-card p-6 cursor-pointer no-underline group flex flex-col justify-between h-32 hover:scale-101 hover:-translate-y-1 transition-all">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-slate-50 rounded-full group-hover:scale-150 transition-transform duration-700 ease-out z-0"></div>
+            <div class="relative z-10 flex justify-between items-start">
+                <div>
+                    <h4 class="text-sm text-slate-500 font-bold group-hover:text-slate-800 transition-colors">Tamamlanan</h4>
+                    <p class="text-4xl font-black text-slate-800 mt-2">@(ViewBag.TamamlananSayisi ?? 0)</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center text-xl shadow-inner border border-slate-200"><i class="bi bi-check2-all"></i></div>
+            </div>
+        </a>
+        
+        <a asp-controller="Gorev" asp-action="Bekleyenler" class="relative overflow-hidden antigravity-card p-6 cursor-pointer no-underline group flex flex-col justify-between h-32 hover:scale-101 hover:-translate-y-1 transition-all">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-amber-50 rounded-full group-hover:scale-150 transition-transform duration-700 ease-out z-0"></div>
+            <div class="relative z-10 flex justify-between items-start">
+                <div>
+                    <h4 class="text-sm text-slate-500 font-bold group-hover:text-amber-600 transition-colors">Bekleyenler</h4>
+                    <p class="text-4xl font-black text-slate-800 mt-2">@(ViewBag.BekleyenSayisi ?? 0)</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shadow-inner border border-amber-100"><i class="bi bi-hourglass-split"></i></div>
+            </div>
+        </a>
+        
+        <a asp-controller="Gorev" asp-action="Aktifler" class="relative overflow-hidden antigravity-card p-6 cursor-pointer no-underline group flex flex-col justify-between h-32 hover:scale-101 hover:-translate-y-1 transition-all">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-50 rounded-full group-hover:scale-150 transition-transform duration-700 ease-out z-0"></div>
+            <div class="relative z-10 flex justify-between items-start">
+                <div>
+                    <h4 class="text-sm text-slate-500 font-bold group-hover:text-emerald-600 transition-colors">Bugün İçin</h4>
+                    <p class="text-4xl font-black text-slate-800 mt-2">@(ViewBag.BugunSayisi ?? 0)</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shadow-inner border border-emerald-100"><i class="fa-solid fa-calendar-day"></i></div>
+            </div>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+        
+        <div class="antigravity-card overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                <h3 class="font-bold text-slate-800 text-base m-0"><i class="bi bi-calendar2-event text-indigo-500 mr-2"></i> Günlük Görevler</h3>
+                <span class="text-xs font-bold bg-indigo-100 text-indigo-600 px-2 py-1 rounded-lg border border-indigo-200">@gunlukGorevler.Count</span>
+            </div>
+            
+            <div class="p-0 flex-grow h-[400px] overflow-y-auto bg-white">
+                @if (gunlukGorevler.Any())
+                {
+                    @foreach (var gorev in gunlukGorevler)
+                    {
+                        <div onclick="gorevDetayAc(@gorev.Id)" class="gorev-item flex items-center justify-between p-4 border-b border-slate-100 hover:bg-slate-50 transition-all hover:scale-101 hover:-translate-y-1 cursor-pointer group">
+                            <span class="gorev-adi text-[15px] font-semibold @(!gorev.DurumAktifMi ? "text-slate-400 line-through" : "text-slate-700 group-hover:text-indigo-600") transition-colors">
+                                @gorev.GorevAdi
+                            </span>
+                            @if(!gorev.DurumAktifMi) {
+                                <span class="text-xs text-slate-500 font-bold bg-slate-100 px-3 py-1 rounded-full border border-slate-200">Bitti</span>
+                            } else {
+                                <span class="text-xs text-indigo-600 font-bold bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">Aktif</span>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="h-full flex flex-col items-center justify-center text-slate-600 text-sm font-medium p-8">
+                        <i class="bi bi-cup-hot text-4xl block mb-3 opacity-50"></i>
+                        Bugün için planlanmış görev yok.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="antigravity-card overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                <h3 class="font-bold text-slate-800 text-base m-0"><i class="bi bi-lightning-charge text-emerald-500 mr-2"></i> Diğer Aktifler</h3>
+                <span class="text-xs font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg border border-emerald-100">@aktifGorevler.Count</span>
+            </div>
+            
+            <div class="p-0 flex-grow h-[400px] overflow-y-auto bg-white">
+                @if (aktifGorevler.Any())
+                {
+                    @foreach (var gorev in aktifGorevler)
+                    {
+                        <div onclick="gorevDetayAc(@gorev.Id)" class="gorev-item flex items-center justify-between p-4 border-b border-slate-100 hover:bg-slate-50 transition-all hover:scale-101 hover:-translate-y-1 cursor-pointer group">
+                            <span class="gorev-adi text-[15px] font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors">
+                                @gorev.GorevAdi
+                            </span>
+                            <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">@gorev.Tarih.ToString("dd.MM.yyyy")</span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="h-full flex flex-col items-center justify-center text-slate-600 text-sm font-medium p-8">
+                        <i class="bi bi-check2-circle text-4xl block mb-3 opacity-50 text-emerald-500"></i>
+                        Tüm görevleri temizlemişsin.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="antigravity-card border-indigo-100 overflow-hidden flex flex-col relative group">
+            <div class="absolute inset-0 bg-gradient-to-b from-indigo-50/40 to-transparent pointer-events-none"></div>
+            <div class="p-5 border-b border-indigo-100 bg-indigo-50/60 flex items-center justify-between relative z-10">
+                <h3 class="font-bold text-indigo-900 text-base m-0"><i class="bi bi-diagram-3-fill text-indigo-500 mr-2"></i> Ekip Görevleri</h3>
+                <span class="text-xs font-bold bg-indigo-600 text-white px-2 py-1 rounded-lg shadow-sm">@ekipGorevleri.Count</span>
+            </div>
+            
+            <div class="p-0 flex-grow h-[400px] overflow-y-auto relative z-10 bg-white">
+                @if (ekipGorevleri.Any())
+                {
+                    @foreach (var gorev in ekipGorevleri)
+                    {
+                        <a href="/Ekip/Detay/@gorev.EkipId" class="gorev-item block p-4 border-b border-slate-100 hover:bg-slate-50 transition-all hover:scale-101 hover:-translate-y-1 cursor-pointer group no-underline">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="gorev-adi text-[15px] font-semibold text-slate-700 group-hover:text-indigo-600 transition-colors line-clamp-1">
+                                    @gorev.GorevAdi
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between mt-2">
+                                <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md flex items-center gap-1 border border-slate-200">
+                                    <i class="bi bi-shield-shaded"></i> @gorev.Ekip.Ad
+                                </span>
+                                <span class="text-[10px] text-indigo-500 font-bold flex items-center gap-1"><i class="bi bi-clock-history"></i> @gorev.Tarih.ToString("dd.MM.yyyy")</span>
+                            </div>
+                        </a>
+                    }
+                }
+                else
+                {
+                    <div class="h-full flex flex-col items-center justify-center text-slate-600 text-sm font-medium p-8">
+                        <i class="bi bi-people-fill text-4xl block mb-3 opacity-30 text-indigo-200"></i>
+                        Ekiplerine atanmış aktif bir görev yok.
+                    </div>
+                }
+            </div>
+        </div>
+        
+    </div>
+
+</div>
+
+<div class="modal fade" id="gorevDetayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div id="modalIcerik" class="modal-content rounded-2xl border-slate-200 shadow-2xl bg-white overflow-hidden">
+            </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+
+        // BİREYSEL GÖREV DETAY MODALI
+        function gorevDetayAc(id) {
+            $("#modalIcerik").html('<div class="p-10 text-center"><div class="spinner-border text-indigo-600" role="status"></div><p class="mt-3 text-slate-600 font-medium">Görev detayları yükleniyor...</p></div>');
+            var modalEl = document.getElementById('gorevDetayModal');
+            var myModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            myModal.show();
+            $("#modalIcerik").load("/Gorev/DetayGetir/" + id);
+        }
+    </script>
+}

@@ -1,0 +1,42 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="max-w-3xl mx-auto mt-10 px-4 mb-10">
+    <div class="antigravity-card p-8 sm:p-10">
+        <div class="flex items-center gap-4 mb-6">
+            <div class="w-14 h-14 bg-red-900/30 rounded-xl flex items-center justify-center border border-red-800/50">
+                <i class="bi bi-exclamation-triangle-fill text-3xl text-red-400"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-black text-red-400 m-0">Error.</h1>
+                <h2 class="text-sm font-medium text-gray-500 m-0">An error occurred while processing your request.</h2>
+            </div>
+        </div>
+
+        @if (Model.ShowRequestId)
+        {
+            <div class="bg-red-900/20 rounded-xl border border-red-800/30 p-4 mb-6">
+                <p class="text-gray-400 m-0">
+                    <strong class="text-gray-300">Request ID:</strong> <code class="text-crimson-400 bg-[#16162b] px-2 py-1 rounded-md text-sm">@Model.RequestId</code>
+                </p>
+            </div>
+        }
+
+        <div class="bg-[#1e1e38] rounded-xl border border-[#2e2e4a] p-6 neo-inset">
+            <h3 class="text-lg font-bold text-gray-200 mb-3">Development Mode</h3>
+            <p class="text-gray-400 text-sm mb-3">
+                Swapping to <strong class="text-gray-300">Development</strong> environment will display more detailed information about the error that occurred.
+            </p>
+            <p class="text-gray-400 text-sm mb-3">
+                <strong class="text-amber-400">The Development environment shouldn't be enabled for deployed applications.</strong>
+                It can result in displaying sensitive information from exceptions to end users.
+            </p>
+            <p class="text-gray-400 text-sm m-0">
+                For local debugging, enable the <strong class="text-gray-300">Development</strong> environment by setting the <strong class="text-gray-300">ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong class="text-gray-300">Development</strong>
+                and restarting the app.
+            </p>
+        </div>
+    </div>
+</div>

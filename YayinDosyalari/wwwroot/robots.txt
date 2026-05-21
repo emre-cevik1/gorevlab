@@ -1,0 +1,17 @@
+# Bütün arama motoru botlarına (Google, Bing, Yandex vb.) izin veriyoruz
+User-agent: *
+
+# İndekslenmesine İZİN VERİLEN (Arama sonuçlarında çıkacak) sayfalar:
+Allow: /
+Allow: /Home/Index
+
+# İndekslenmesi YASAKLANAN (Google'da çıkmasını istemediğimiz) sayfalar:
+Disallow: /Admin/
+Disallow: /Auth/Login
+Disallow: /Auth/Register
+Disallow: /Auth/SifremiUnuttum
+Disallow: /Auth/KodDogrulama
+
+# (Eğer varsa) Sitemap (Site Haritası) yolunu göster
+# Sitemap: https://gorevlab.com.tr/sitemap.xml
+# Google'a haritanın yerini gösteriyoruz

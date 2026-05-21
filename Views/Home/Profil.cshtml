@@ -1,0 +1,97 @@
+@model GorevTakipSistemi.Models.Kullanici
+
+@{
+    ViewData["Title"] = "Profilim";
+    
+    // Ad ve Soyadın baş harflerini alıp birleştiriyoruz (Örn: Emre Çevik -> EÇ)
+    var basHarfler = "";
+    if (!string.IsNullOrEmpty(Model.Ad) && !string.IsNullOrEmpty(Model.Soyad)) {
+        basHarfler = Model.Ad.Substring(0,1).ToUpper() + Model.Soyad.Substring(0,1).ToUpper();
+    } else {
+        basHarfler = "U";
+    }
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card antigravity-card rounded-3xl overflow-hidden mt-4" style="display:none;" id="profil-karti">
+                
+                <div class="bg-gradient-to-r from-purple-500 to-indigo-600 p-8 text-center text-white relative">
+                    
+                    <div class="mb-4 flex justify-center">
+                        <div class="h-28 w-28 rounded-full border-4 border-indigo-300/50 shadow-lg shadow-indigo-900/40 bg-indigo-50/40 backdrop-blur-sm flex items-center justify-center text-4xl font-black tracking-widest transition-transform hover:scale-105 duration-300">
+                            @basHarfler
+                        </div>
+                    </div>
+                    
+                    <h2 class="text-3xl font-extrabold mb-0">@Model.Ad @Model.Soyad</h2>
+                    <p class="text-indigo-100 font-medium mt-1"><i class="bi bi-at"></i>@Model.KullaniciAdi</p>
+                    
+                    @if(Model.Rol == GorevTakipSistemi.Models.KullaniciRol.Owner || Model.Rol == GorevTakipSistemi.Models.KullaniciRol.Admin)
+                    {
+                        <span class="badge bg-indigo-600 mt-2 text-sm px-4 py-2 rounded-full shadow-sm border border-indigo-600/50">
+                            <i class="bi bi-shield-lock-fill"></i> @(Model.Rol == GorevTakipSistemi.Models.KullaniciRol.Owner ? "Sistem Kurucusu" : "Sistem Yöneticisi")
+                        </span>
+                    }
+                </div>
+
+                <div class="card-body p-0 bg-slate-50">
+                    <div class="row g-0">
+                        <div class="col-md-6 p-6 border-e border-slate-200 bg-white">
+                            <h4 class="font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2"><i class="bi bi-person-lines-fill me-2 text-indigo-500"></i>Kişisel Bilgiler</h4>
+                            <form asp-controller="Home" asp-action="Profil" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label text-xs font-bold text-gray-600 uppercase mb-1">Hesap ID</label>
+                                    <input type="text" class="form-control antigravity-input text-sm font-bold" value="#@Model.Id" readonly disabled>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-xs font-bold text-slate-600 uppercase mb-1">E-Posta</label>
+                                    <input type="email" name="Email" class="form-control antigravity-input text-sm" required value="@Model.Email">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label text-xs font-bold text-slate-600 uppercase mb-1">Kullanıcı Adı</label>
+                                    <input type="text" name="KullaniciAdi" class="form-control antigravity-input text-sm" required value="@Model.KullaniciAdi">
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn antigravity-btn font-bold rounded-xl py-2 w-full">Bilgileri Kaydet</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="col-md-6 p-6">
+                            <h4 class="font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2"><i class="bi bi-key me-2 text-indigo-500"></i>Şifre Değiştir</h4>
+                            <form asp-controller="Home" asp-action="Profil" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label text-sm font-bold text-slate-600">Eski Şifre</label>
+                                    <input type="password" name="eskiSifre" class="form-control antigravity-input text-sm" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-sm font-bold text-slate-600">Yeni Şifre</label>
+                                    <input type="password" name="yeniSifre" class="form-control antigravity-input text-sm" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label text-sm font-bold text-slate-600">Yeni Şifre (Tekrar)</label>
+                                    <input type="password" name="yeniSifreTekrar" class="form-control antigravity-input text-sm" required>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn antigravity-btn rounded-full text-white font-bold py-2 w-full">Şifreyi Güncelle</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Şık giriş animasyonu
+            $('#profil-karti').css({ 'margin-top': '-30px', 'opacity': '0', 'display': 'block' })
+                .animate({ 'margin-top': '0px', 'opacity': '1' }, 300);
+        });
+    </script>
+}

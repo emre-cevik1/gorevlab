@@ -1,0 +1,55 @@
+/* GorevLab - Layout CSS - Light Indigo Theme */
+
+a.navbar-brand {
+  white-space: normal;
+  text-align: center;
+  word-break: break-all;
+}
+
+a {
+  color: #4f46e5;
+}
+a:hover {
+  color: #4338ca;
+}
+
+.btn-primary {
+  color: #fff;
+  background-color: #4f46e5;
+  border-color: #4338ca;
+  border-radius: 9999px;
+}
+.btn-primary:hover {
+  background-color: #4338ca;
+  border-color: #3730a3;
+}
+
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+  color: #fff;
+  background-color: #4f46e5;
+  border-color: #4338ca;
+}
+
+.border-top {
+  border-top: 1px solid #e2e8f0;
+}
+.border-bottom {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.box-shadow {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+button.accept-policy {
+  font-size: 1rem;
+  line-height: inherit;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px;
+}

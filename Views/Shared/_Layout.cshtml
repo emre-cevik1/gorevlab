@@ -1,0 +1,290 @@
+@using Microsoft.AspNetCore.Http
+@{
+    var tamAdSoyad = Context.Session.GetString("KullaniciAdSoyad") ?? "Kullanıcı";
+    var adSoyad = tamAdSoyad;
+    var kelimeler = tamAdSoyad.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+    if (kelimeler.Length > 1) {
+        adSoyad = string.Join(" ", kelimeler.Take(kelimeler.Length - 1));
+    }
+    
+    var basHarfler = "U";
+    if (kelimeler.Length >= 2) {
+        basHarfler = kelimeler[0].Substring(0, 1).ToUpper() + kelimeler[kelimeler.Length - 1].Substring(0, 1).ToUpper();
+    } else if (kelimeler.Length == 1) {
+        basHarfler = kelimeler[0].Substring(0, 1).ToUpper();
+    }
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - GorevLab.</title>
+    <link rel="shortcut icon" type="image/x-icon" href="~/favicon.ico" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        indigo: { 50: '#f0f5fa', 100: '#e1ebf5', 500: '#3B8AC4', 600: '#345DA7' },
+                        purple: { 500: '#4BB4DE' },
+                        slate: { 50: '#faf6f3' }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="~/css/site.css" />
+    <style>
+        /* Glass Navbar & Blur Base */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Subtle Floating App Background Pattern */
+        .bg-pattern {
+            background-color: #f8fafc;
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+
+        /* Off-canvas Mobile Menu Transition */
+        #mobile-menu {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            transform: translateY(-10px);
+            opacity: 0;
+            pointer-events: none;
+        }
+        #mobile-menu.menu-active {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="bg-pattern text-slate-800 transition-colors duration-300 min-h-screen">
+    
+    <!-- Floating background decorative blobs - Ocean Palette -->
+    <div class="fixed top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-[#4BB4DE]/40 rounded-full mix-blend-multiply filter blur-[100px] opacity-80 animate-blob pointer-events-none -z-10"></div>
+    <div class="fixed top-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-[#3B8AC4]/40 rounded-full mix-blend-multiply filter blur-[100px] opacity-80 animate-blob pointer-events-none -z-10" style="animation-delay: 2s;"></div>
+    <div class="fixed bottom-[-10%] left-[20%] w-[40rem] h-[40rem] bg-[#345DA7]/40 rounded-full mix-blend-multiply filter blur-[100px] opacity-80 animate-blob pointer-events-none -z-10" style="animation-delay: 4s;"></div>
+
+    <header class="sticky top-0 z-50">
+        @if (Context.Session.GetInt32("KullaniciId") != null)
+        {
+            <nav class="glass-nav py-2 sm:py-0">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between h-16 items-center">
+                        
+                        <!-- Logo -->
+                        <div class="flex items-center">
+                            <a asp-controller="Home" asp-action="Index" class="flex items-center group no-underline shrink-0">
+                                <span class="text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-[#345DA7] transition">
+                                    GorevLab.
+                                </span>
+                            </a>
+                        </div>
+
+                        <!-- Desktop Menu -->
+                        <div class="hidden md:flex items-center gap-6 ml-10 mr-auto">
+                            <a asp-controller="Gorev" asp-action="Index" class="px-2 py-2 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:-translate-y-0.5 transition-all duration-300 no-underline">Tüm Görevler</a>
+                            <a asp-controller="Iletisim" asp-action="Index" class="px-2 py-2 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:-translate-y-0.5 transition-all duration-300 no-underline">Bize Ulaşın</a>
+                        </div>
+
+                        <!-- User & Actions -->
+                        <div class="flex items-center gap-3 sm:gap-4">
+                            
+                            @if (Context.Session.GetInt32("KullaniciRol") == (int)GorevTakipSistemi.Models.KullaniciRol.Owner)
+                            {
+                                <a asp-controller="Admin" asp-action="Loglar" class="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-full border border-slate-200 hover:bg-white hover:text-indigo-600 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 no-underline group">
+                                    <i class="fa-solid fa-terminal group-hover:rotate-12 transition-transform"></i> Loglar
+                                </a>
+                            }
+
+                            @if (Context.Session.GetInt32("KullaniciRol") == (int)GorevTakipSistemi.Models.KullaniciRol.Admin || Context.Session.GetInt32("KullaniciRol") == (int)GorevTakipSistemi.Models.KullaniciRol.Owner)
+                            {
+                                <a asp-controller="Admin" asp-action="Kullanicilar" class="hidden lg:flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 text-xs font-bold uppercase tracking-widest rounded-full border border-indigo-100 hover:bg-white hover:shadow-lg hover:shadow-indigo-500/20 hover:-translate-y-1 transition-all duration-300 no-underline group">
+                                    <i class="fa-solid fa-shield-halved group-hover:rotate-12 transition-transform"></i> Admin
+                                </a>
+                                <a asp-controller="Admin" asp-action="DestekTalepleri" class="hidden lg:flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 text-xs font-bold uppercase tracking-widest rounded-full border border-amber-100 hover:bg-white hover:shadow-lg hover:shadow-amber-500/20 hover:-translate-y-1 transition-all duration-300 no-underline group">
+                                    <i class="bi bi-ticket-detailed-fill group-hover:rotate-12 transition-transform"></i> Destek
+                                </a>
+                            }
+
+                            <!-- Profile -->
+                            <a asp-controller="Home" asp-action="Profil" class="hidden md:flex items-center gap-2 pl-2 pr-4 py-1.5 bg-white border border-slate-200 text-sm font-bold text-slate-700 hover:border-indigo-300 rounded-full transition-all duration-300 no-underline shadow-sm hover:shadow-lg hover:-translate-y-1">
+                                <div class="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-inner">
+                                    @basHarfler
+                                </div>
+                                <span>@adSoyad</span>
+                            </a>
+
+                            <a asp-controller="Auth" asp-action="Logout" class="hidden md:flex items-center justify-center w-10 h-10 text-slate-400 hover:text-red-500 hover:bg-red-50 hover:shadow-lg hover:-translate-y-1 rounded-full transition-all duration-300 no-underline" title="Çıkış Yap">
+                                <i class="fa-solid fa-power-off text-lg"></i>
+                            </a>
+
+                            <!-- Mobile Toggle -->
+                            <button id="mobile-menu-btn" class="md:hidden ml-2 w-12 h-12 flex items-center justify-center rounded-2xl bg-white text-slate-600 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border border-slate-100">
+                                <i class="fa-solid fa-bars text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Glassmorphism Off-canvas Mobile Menu -->
+                <div id="mobile-menu" class="absolute top-[100%] left-0 w-full glass-nav border-t border-white/40 shadow-2xl z-40 px-4 py-6 rounded-b-3xl">
+                    <div class="space-y-3">
+                        
+                        <div class="flex items-center gap-4 px-5 py-4 mb-4 bg-white/80 rounded-3xl border border-white/60 shadow-sm">
+                            <div class="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md">
+                                @basHarfler
+                            </div>
+                            <div>
+                                <div class="text-base font-bold text-slate-800">@adSoyad</div>
+                                <a asp-controller="Home" asp-action="Profil" class="text-sm font-bold text-indigo-600 hover:underline">Profili Düzenle</a>
+                            </div>
+                        </div>
+
+                        <a asp-controller="Gorev" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-list-task text-indigo-600 text-xl me-3"></i> Tüm Görevler</a>
+                        <a asp-controller="Iletisim" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-envelope text-indigo-600 text-xl me-3"></i> Bize Ulaşın</a>
+                        
+                        <div class="border-t border-slate-200/50 my-4 mx-2"></div>
+
+                        @if (Context.Session.GetInt32("KullaniciRol") == (int)GorevTakipSistemi.Models.KullaniciRol.Admin || Context.Session.GetInt32("KullaniciRol") == (int)GorevTakipSistemi.Models.KullaniciRol.Owner)
+                        {
+                            <a asp-controller="Admin" asp-action="Kullanicilar" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100 hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="fa-solid fa-shield-halved text-xl me-3"></i> Admin Paneli</a>
+                            <a asp-controller="Admin" asp-action="DestekTalepleri" class="flex items-center px-5 py-4 mt-2 rounded-2xl text-base font-bold text-amber-700 bg-amber-50/80 hover:bg-amber-100 hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-ticket-detailed-fill text-xl me-3"></i> Destek Talepleri</a>
+                        }
+                        
+                        <a asp-controller="Auth" asp-action="Logout" class="flex items-center px-5 py-4 mt-4 rounded-2xl text-base font-bold text-red-600 bg-red-50/80 hover:bg-red-100 hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="fa-solid fa-power-off text-xl me-3"></i> Çıkış Yap</a>
+                    </div>
+                </div>
+            </nav>
+        }
+    </header>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
+        <main role="main" class="pb-16 animate-fade-in-up">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Smooth Off-canvas toggle
+            $('#mobile-menu-btn').click(function (e) {
+                e.stopPropagation();
+                const menu = $('#mobile-menu');
+                menu.toggleClass('menu-active');
+                
+                const icon = $(this).find('i');
+                if (menu.hasClass('menu-active')) {
+                    icon.removeClass('fa-bars').addClass('fa-xmark');
+                } else {
+                    icon.removeClass('fa-xmark').addClass('fa-bars');
+                }
+            });
+
+            // Close mobile menu when clicking outside
+            $(document).click(function (e) {
+                if (!$(e.target).closest('#mobile-menu').length && !$(e.target).closest('#mobile-menu-btn').length) {
+                    $('#mobile-menu').removeClass('menu-active');
+                    $('#mobile-menu-btn').find('i').removeClass('fa-xmark').addClass('fa-bars');
+                }
+            });
+        });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            // Floating Glass Toast
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3500,
+                timerProgressBar: true,
+                background: 'rgba(255, 255, 255, 0.95)',
+                color: '#1e293b',
+                iconColor: undefined,
+                customClass: {
+                    popup: 'border border-white/50 shadow-2xl shadow-indigo-500/10 rounded-2xl backdrop-blur-md'
+                }
+            });
+
+            @if (TempData["Success"] != null)
+            {
+                @:Toast.fire({ icon: 'success', title: '@Html.Raw(TempData["Success"])' });
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                @:Toast.fire({ icon: 'error', title: '@Html.Raw(TempData["Error"])' });
+            }
+        });
+    </script>
+
+    <script>
+        function islemOnayi(url, islemTipi) {
+            let baslik = "";
+            let mesaj = "";
+            let butonClass = "";
+            let onayMetni = "";
+
+            if (islemTipi === 'sil') {
+                baslik = "Emin misiniz?";
+                mesaj = "Bu işlem geri alınamaz ve kayıt tamamen silinir!";
+                butonClass = "bg-red-500 hover:bg-red-600 text-white rounded-full px-6 py-3 shadow-lg hover:-translate-y-1 transition-all";
+                onayMetni = "Evet, Sil!";
+            } else if (islemTipi === 'tamamla') {
+                baslik = "Görevi Tamamla?";
+                mesaj = "Bu görevi tamamlanmış olarak işaretlemek istiyor musunuz?";
+                butonClass = "bg-emerald-500 hover:bg-emerald-600 text-white rounded-full px-6 py-3 shadow-lg hover:-translate-y-1 transition-all";
+                onayMetni = "Evet, Tamamla!";
+            }
+
+            Swal.fire({
+                title: baslik,
+                text: mesaj,
+                icon: 'warning',
+                showCancelButton: true,
+                buttonsStyling: false,
+                customClass: {
+                    popup: 'border border-white/50 shadow-2xl rounded-[2rem] backdrop-blur-xl bg-white/95',
+                    title: 'text-slate-800 font-bold text-xl',
+                    htmlContainer: 'text-slate-500',
+                    actions: 'gap-4 mt-6',
+                    confirmButton: butonClass,
+                    cancelButton: 'bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full px-6 py-3 transition-all'
+                },
+                cancelButtonText: 'İptal',
+                confirmButtonText: onayMetni,
+                background: 'transparent'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
+        }
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

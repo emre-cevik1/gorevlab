@@ -1,0 +1,61 @@
+@model GorevTakipSistemi.Models.Gorev
+
+@{
+    ViewData["Title"] = "Görev Düzenle";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="antigravity-card overflow-hidden">
+                
+                <div class="p-6 text-white text-center bg-gradient-to-r from-purple-500 to-indigo-600">
+                    <h3 class="text-2xl font-bold mb-0"><i class="bi bi-pencil-square me-2"></i>Görevi Düzenle</h3>
+                    <p class="text-indigo-100 text-sm mt-1">Görev bilgilerini güncelleyin.</p>
+                </div>
+
+                <div class="card-body p-5 bg-white">
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        
+                        <div class="mb-4">
+                            <label class="form-label font-bold text-slate-800">Görev Başlığı</label>
+                            <input type="text" asp-for="GorevAdi" class="antigravity-input form-control form-control-lg text-slate-800 placeholder-slate-400 py-3" required />
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label font-bold text-slate-800">Açıklama</label>
+                            <textarea asp-for="Aciklama" class="antigravity-input form-control text-slate-800 placeholder-slate-400 py-3" rows="4" required></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label font-bold text-slate-800">Tarih / Saat</label>
+                                <input type="datetime-local" asp-for="Tarih" class="antigravity-input form-control form-control-lg text-slate-800 py-3" required />
+                            </div>
+                            
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label font-bold text-slate-800">Durum</label>
+                                <select asp-for="DurumAktifMi" class="antigravity-input form-select form-select-lg text-slate-800 py-3">
+                                    <option value="true">Devam Ediyor (Aktif)</option>
+                                    <option value="false">Tamamlandı</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <input type="hidden" asp-for="Oncelik" value="Orta" />
+
+                        <div class="flex flex-col sm:flex-row items-center justify-between mt-8 pt-6 border-t border-slate-100 gap-4">
+                            <a asp-action="Index" class="bg-white hover:bg-slate-50 shadow-md hover:shadow-lg rounded-full px-5 py-3 transition-all hover:-translate-y-1 text-slate-800 font-medium text-sm flex items-center gap-2 no-underline w-full sm:w-auto justify-center">
+                                <i class="bi bi-arrow-left"></i> İptal
+                            </a>
+                            <button type="submit" class="antigravity-btn font-bold py-3 px-8 flex items-center gap-2 w-full sm:w-auto justify-center">
+                                Değişiklikleri Kaydet <i class="bi bi-check2"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

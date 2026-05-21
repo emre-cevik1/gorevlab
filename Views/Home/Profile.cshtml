@@ -1,0 +1,31 @@
+@model GorevTakipSistemi.Models.Kullanici
+
+@{
+    ViewData["Title"] = "Profilim";
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card neo-raised border border-[#2e2e4a] bg-[#242440] rounded-2xl overflow-hidden">
+            <div class="card-header bg-gradient-to-r from-[#8B0000] to-[#3a0a0a] text-white border-b border-[#2e2e4a]">
+                <h4 class="mb-0"><i class="bi bi-person-circle"></i> Kullanıcı Profili</h4>
+            </div>
+            <div class="card-body text-center bg-[#242440]">
+                <div class="mb-4">
+                    <img src="https://ui-avatars.com/api/?name=@Model.Ad+@Model.Soyad&background=3a0a0a&color=ff4444&size=128" class="rounded-circle shadow-lg shadow-crimson-900/30 border-2 border-crimson-700/50" alt="Profil Resmi" />
+                </div>
+                
+                <h3 class="card-title text-gray-200 font-bold">@Model.Ad @Model.Soyad</h3>
+                <p class="text-gray-500 fs-5">@Model.Email</p>
+
+                <hr class="border-[#2e2e4a]" />
+                <p class="text-start text-gray-400"><strong class="text-gray-300">Kayıtlı Kullanıcı ID:</strong> #@Model.Id</p>
+                <p class="text-start text-gray-400"><strong class="text-gray-300">Şifre Durumu:</strong> <span class="text-emerald-400">Güvenli Kriptolanmış Hash</span></p>
+
+                <div class="d-grid gap-2 mt-4">
+                    <a asp-action="Index" class="btn border border-[#2e2e4a] text-gray-400 hover:bg-[#1e1e38] hover:text-gray-200 rounded-xl transition-all">Ana Sayfaya Dön</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

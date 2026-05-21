@@ -1,0 +1,122 @@
+@model List<GorevTakipSistemi.Models.Gorev>
+@using Microsoft.AspNetCore.Http
+
+@{
+    ViewData["Title"] = "Aktif Görevlerim";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+            <h2 class="text-3xl md:text-4xl font-black text-amber-500 tracking-tight mb-2">Aktif Görevlerim</h2>
+            <p class="text-slate-600 font-medium italic">Şu an @Model.Count Aktif göreviniz bulunuyor.</p>
+        </div>
+        
+        <div class="flex gap-3">
+            <div class="antigravity-card px-6 py-3 text-center">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Aktif Görev</p>
+                <p class="text-2xl font-black text-amber-500">@Model.Count</p>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Count > 0)
+    {
+        @* Mobil Görünüm *@
+        <div class="md:hidden space-y-4">
+            @foreach (var gorev in Model)
+            {
+                <div class="antigravity-card p-5 hover:scale-101 hover:-translate-y-1 transition-all">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-lg shadow-inner border border-amber-100">
+                                @gorev.GorevAdi.Substring(0, 1).ToUpper()
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm mb-0">@gorev.GorevAdi</h4>
+                                <p class="text-xs text-slate-600 font-medium"><i class="bi bi-clock me-1"></i> Bitiş: @gorev.Tarih.ToShortDateString()</p>
+                            </div>
+                        </div>
+                        <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-600 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase border border-amber-100">
+                            <i class="bi bi-hourglass-split"></i> Bekliyor
+                        </span>
+                    </div>
+
+                    <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+                        <button onclick="islemOnayi('/Gorev/Tamamla/@gorev.Id', 'tamamla')" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition-all border border-slate-200 hover:border-emerald-200 cursor-pointer" title="Tamamla">
+                            <i class="bi bi-check-lg text-lg"></i>
+                        </button>
+                        <button onclick="islemOnayi('/Gorev/Delete/@gorev.Id', 'sil')" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all border border-slate-200 hover:border-red-200 cursor-pointer" title="Sil">
+                            <i class="bi bi-trash3 text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @* Masaüstü Görünüm *@
+        <div class="hidden md:block antigravity-card overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 bg-transparent">
+                    <thead class="bg-slate-50 border-b border-slate-100">
+                        <tr>
+                            <th class="px-8 py-5 text-xs font-black text-slate-600 uppercase tracking-widest border-0">Görev Bilgisi</th>
+                            <th class="px-6 py-5 text-center text-xs font-black text-slate-600 uppercase tracking-widest border-0">Bitiş Tarihi</th>
+                            <th class="px-6 py-5 text-center text-xs font-black text-slate-600 uppercase tracking-widest border-0">Durum</th>
+                            <th class="px-8 py-5 text-end text-xs font-black text-slate-600 uppercase tracking-widest border-0">Eylemler</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach (var gorev in Model)
+                        {
+                            <tr class="group hover:bg-slate-50/50 transition-all hover:scale-101 hover:-translate-y-1">
+                                <td class="px-8 py-5 border-0">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-lg shadow-inner border border-amber-100">
+                                            @gorev.GorevAdi.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-slate-800 mb-0">@gorev.GorevAdi</h4>
+                                            <p class="text-xs text-slate-600 font-medium"><i class="bi bi-tag-fill me-1"></i>Aktif Görev</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-5 text-center border-0 font-medium text-slate-600">
+                                    <i class="bi bi-clock me-1 text-slate-400"></i> @gorev.Tarih.ToShortDateString()
+                                </td>
+                                <td class="px-6 py-5 text-center border-0">
+                                    <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase border border-amber-100">
+                                        <i class="bi bi-hourglass-split"></i> Bekliyor
+                                    </span>
+                                </td>
+                                <td class="px-8 py-5 text-end border-0">
+                                    <div class="flex justify-end gap-2">
+                                        <button onclick="islemOnayi('/Gorev/Tamamla/@gorev.Id', 'tamamla')" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition-all border border-slate-200 hover:border-emerald-200 cursor-pointer" title="Tamamla">
+                                            <i class="bi bi-check-lg text-lg"></i>
+                                        </button>
+                                        <button onclick="islemOnayi('/Gorev/Delete/@gorev.Id', 'sil')" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all border border-slate-200 hover:border-red-200 cursor-pointer" title="Sil">
+                                            <i class="bi bi-trash3 text-sm"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="antigravity-card p-12 text-center">
+            <div class="w-24 h-24 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center font-black text-5xl shadow-inner border border-emerald-100 mx-auto mb-6">
+                <i class="bi bi-check2-circle"></i>
+            </div>
+            <h3 class="text-2xl font-black text-slate-800 mb-2">Harika! Aktif göreviniz yok.</h3>
+            <p class="text-slate-600 font-medium mb-6">Tüm işler tıkır tıkır işliyor gibi görünüyor. <i class="bi bi-emoji-smile"></i></p>
+            <a asp-action="Create" class="antigravity-btn font-bold py-3 px-6 no-underline inline-flex items-center">
+                Yeni Görev Oluştur <i class="bi bi-plus-lg ms-2"></i>
+            </a>
+        </div>
+    }
+</div>

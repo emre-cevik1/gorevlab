@@ -1,0 +1,153 @@
+@model List<GorevTakipSistemi.Models.Gorev>
+
+@{
+    ViewData["Title"] = "Admin Paneli - Tüm Görevler";
+}
+
+<div class="max-w-7xl mx-auto mt-6 px-4 mb-12">
+
+    <div class="flex flex-wrap gap-2 mb-6">
+        <a asp-action="Kullanicilar" class="px-5 py-2.5 bg-white hover:bg-slate-50 shadow-md hover:shadow-lg rounded-full transition-all hover:-translate-y-1 text-slate-700 font-bold text-sm no-underline">
+            <i class="fa-solid fa-users mr-1"></i> Kullanıcı Yönetimi
+        </a>
+        <a asp-action="TumGorevler" class="px-5 py-2.5 antigravity-btn rounded-full font-bold text-sm no-underline">
+            <i class="bi bi-card-checklist mr-1"></i> Sistemdeki Tüm Görevler
+        </a>
+        <a asp-action="DestekTalepleri" class="px-5 py-2.5 bg-white hover:bg-slate-50 shadow-md hover:shadow-lg rounded-full transition-all hover:-translate-y-1 text-slate-700 font-bold text-sm no-underline">
+            <i class="bi bi-ticket-detailed mr-1"></i> Destek Talepleri
+        </a>
+    </div>
+
+    <div class="antigravity-card overflow-hidden">
+        
+        <div class="bg-[#1a1a2e] text-white p-5 flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-600 rounded-full opacity-20 blur-3xl"></div>
+            
+            <div class="flex items-center gap-3 font-bold text-lg relative z-10">
+                <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-slate-200">
+                    <i class="bi bi-card-checklist text-emerald-600 text-xl"></i>
+                </div>
+                <div>
+                    <span class="block text-slate-800">Sistem Görev Denetimi</span>
+                    <span class="text-xs text-slate-500 font-normal">Sistemdeki tüm kullanıcıların görevlerini buradan izleyebilir ve müdahale edebilirsiniz.</span>
+                </div>
+            </div>
+
+            <div class="relative w-full sm:w-80 z-10">
+                <input type="text" id="adminGorevAra" class="antigravity-input w-full pl-10 pr-4 py-2 text-sm" placeholder="Görev veya kullanıcı ara...">
+                <i class="bi bi-search absolute left-3.5 top-2.5 text-slate-500"></i>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            @if (!Model.Any())
+            {
+                <div class="py-16 text-center text-slate-500">
+                    <i class="bi bi-inbox text-5xl mb-3 opacity-50 block"></i>
+                    <p class="font-medium">Sistemde henüz hiç görev bulunmuyor.</p>
+                </div>
+            }
+            else
+            {
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider font-bold">
+                            <th class="p-4 pl-6">Görev Sahibi</th>
+                            <th class="p-4">Görev Başlığı</th>
+                            <th class="p-4">Durum</th>
+                            <th class="p-4">Tarih</th>
+                            <th class="p-4 text-right pr-6">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#e2e8f0]">
+                        @foreach (var g in Model)
+                        {
+                            <tr class="transition-all hover:scale-[1.01] hover:shadow-md bg-white rounded-lg group admin-gorev-satiri">
+                                <td class="p-4 pl-6">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
+                                            @(g.Kullanici?.Ad?.Substring(0,1) ?? "U")
+                                        </div>
+                                        <div>
+                                            <div class="font-bold text-slate-800 text-sm aranacak-kullanici">@(g.Kullanici?.Ad) @(g.Kullanici?.Soyad)</div>
+                                            <div class="text-xs text-slate-500">@@@(g.Kullanici?.KullaniciAdi)</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="p-4">
+                                    <span class="font-semibold text-slate-800 aranacak-gorev">@g.GorevAdi</span>
+                                </td>
+                                <td class="p-4">
+                                    @if (g.DurumAktifMi)
+                                    { 
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200">
+                                            <i class="bi bi-activity"></i> Devam Ediyor
+                                        </span> 
+                                    }
+                                    else 
+                                    { 
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                                            <i class="bi bi-check2-all"></i> Tamamlandı
+                                        </span> 
+                                    }
+                                </td>
+                                <td class="p-4 text-sm text-slate-500 font-medium">
+                                    @g.Tarih.ToString("dd MMM yyyy")
+                                </td>
+                                <td class="p-4 pr-6 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button onclick="adminGorevDetayAc(@g.Id)" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-colors border-0 cursor-pointer" title="Detaylı İncele">
+                                            <i class="bi bi-eye-fill"></i>
+                                        </button>
+                                        
+                                        <button onclick="islemOnayi('/Admin/KullaniciGoreviSil/@g.Id', 'sil')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors border-0 cursor-pointer" title="Sistemden Sil">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="adminGorevDetayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div id="adminModalIcerik" class="modal-content rounded-3xl border-none shadow-2xl overflow-hidden">
+            </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // CANLI ARAMA (Görev Adı veya Kullanıcı Adına Göre)
+        $(document).ready(function() {
+            $("#adminGorevAra").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                
+                $(".admin-gorev-satiri").filter(function() {
+                    var gorevIsmi = $(this).find(".aranacak-gorev").text().toLowerCase();
+                    var kullaniciIsmi = $(this).find(".aranacak-kullanici").text().toLowerCase();
+                    
+                    // Görev isminde veya kullanıcı isminde geçiyorsa göster
+                    $(this).toggle(gorevIsmi.indexOf(value) > -1 || kullaniciIsmi.indexOf(value) > -1);
+                });
+            });
+        });
+
+        // ADMİN MODAL TETİKLEYİCİ
+        function adminGorevDetayAc(id) {
+            $("#adminModalIcerik").html('<div class="p-10 text-center"><div class="spinner-border text-indigo-500" role="status"></div><p class="mt-3 text-slate-500 font-medium">Görev denetim verileri getiriliyor...</p></div>');
+            
+            var modalEl = document.getElementById('adminGorevDetayModal');
+            var myModal = bootstrap.Modal.getInstance(modalEl);
+            if (!myModal) { myModal = new bootstrap.Modal(modalEl); }
+            myModal.show();
+            
+            $("#adminModalIcerik").load("/Admin/GorevDetayGetir/" + id);
+        }
+    </script>
+}

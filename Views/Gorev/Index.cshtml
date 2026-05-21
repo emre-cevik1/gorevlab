@@ -1,0 +1,200 @@
+@model List<GorevTakipSistemi.Models.Gorev>
+
+@{
+    ViewData["Title"] = "Görev Listesi";
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+    
+    // Modern iOS tarzı hap sekme renkleri - Light Temaya Uygun
+    string activeTab = "antigravity-card text-indigo-600";
+    string passiveTab = "text-slate-500 hover:text-indigo-600 hover:bg-slate-100";
+}
+
+<div class="max-w-5xl mx-auto mt-6 px-4 mb-12">
+
+    <div class="antigravity-card overflow-hidden">
+        
+        <div class="p-4 sm:p-5 flex items-center justify-between relative overflow-hidden bg-gradient-to-r from-purple-500 to-indigo-600">
+            <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-indigo-300 opacity-20 blur-2xl"></div>
+            
+            <div class="flex items-center gap-3 font-bold text-lg relative z-10 text-white">
+                <i class="bi bi-card-checklist text-2xl opacity-80"></i>
+                <span>Görev Listesi</span>
+            </div>
+            <a asp-action="Create" class="relative z-10 bg-white/20 hover:bg-white/30 text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors no-underline shadow-sm hover:-translate-y-1 hover:scale-101" title="Yeni Ekle">
+                <i class="bi bi-plus-lg font-bold"></i>
+            </a>
+        </div>
+
+        <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-center sm:justify-start">
+            <div class="inline-flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto overflow-x-auto border border-slate-200">
+                @{
+                    var indexClass = currentAction == "Index" ? activeTab : passiveTab;
+                    var aktiflerClass = currentAction == "Aktifler" ? activeTab : passiveTab;
+                    var tamamlananlarClass = currentAction == "Tamamlananlar" ? activeTab : passiveTab;
+                    var bekleyenlerClass = currentAction == "Bekleyenler" ? activeTab : passiveTab;
+                }
+                <a asp-action="Index" class="px-5 py-2 font-bold text-sm rounded-lg transition-all no-underline text-center flex-1 sm:flex-none whitespace-nowrap @indexClass">Tümü</a>
+                <a asp-action="Aktifler" class="px-5 py-2 font-bold text-sm rounded-lg transition-all no-underline text-center flex-1 sm:flex-none whitespace-nowrap @aktiflerClass">Aktif</a>
+                <a asp-action="Tamamlananlar" class="px-5 py-2 font-bold text-sm rounded-lg transition-all no-underline text-center flex-1 sm:flex-none whitespace-nowrap @tamamlananlarClass">Tamamlanan</a>
+                <a asp-action="Bekleyenler" class="px-5 py-2 font-bold text-sm rounded-lg transition-all no-underline text-center flex-1 sm:flex-none whitespace-nowrap @bekleyenlerClass">Bekleyen</a>
+            </div>
+        </div>
+
+        <div class="p-4 border-b border-slate-100 bg-white">
+            <div class="relative w-full max-w-md">
+                <input type="text" id="gorevSayfasiAra" class="antigravity-input w-full pl-10 pr-4 py-3 outline-none text-sm" placeholder="Bu sekmedeki görevlerde ara...">
+                <i class="bi bi-search absolute left-3.5 top-3.5 text-slate-400"></i>
+            </div>
+        </div>
+
+        <div class="p-0">
+            @if (!Model.Any())
+            {
+                <div class="py-16 px-6 text-center flex flex-col items-center justify-center bg-slate-50/50">
+                    <div class="w-16 h-16 bg-slate-100 text-slate-400 border border-slate-200 rounded-full flex items-center justify-center text-3xl mb-4">
+                        <i class="bi bi-inbox"></i>
+                    </div>
+                    <h3 class="text-slate-800 font-bold text-lg">Görev Bulunamadı</h3>
+                    <p class="text-slate-600 text-sm mt-1 max-w-sm">Bu sekmede şu an gösterilecek herhangi bir görev yok. Yeni bir görev ekleyerek başlayabilirsiniz.</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var item in Model)
+                {
+                    <div class="gorev-satiri flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 hover:bg-indigo-50/50 transition-all hover:scale-101 hover:-translate-y-1 group">
+                        
+                        <div class="flex items-start gap-4">
+                            @if (item.DurumAktifMi)
+                            {
+                                <button onclick="islemOnayi('/Gorev/Tamamla/@item.Id', 'tamamla')" class="mt-0.5 text-2xl no-underline shrink-0 border-0 bg-transparent p-0 cursor-pointer text-left" title="Görevi Tamamla">
+                                    <i class="bi bi-circle text-slate-300 hover:text-indigo-500 transition-colors"></i>
+                                </button>
+                            }
+                            else
+                            {
+                                <a href="/Gorev/DurumDegistir/@item.Id" class="mt-0.5 text-2xl no-underline shrink-0" title="Geri Al (Aktif Yap)">
+                                    <i class="bi bi-check-circle-fill text-indigo-500 shadow-sm rounded-full"></i>
+                                </a>
+                            }
+
+                            <div class="flex flex-col">
+                                @{ var textClass = !item.DurumAktifMi ? "text-slate-400 line-through" : "text-slate-800"; }
+                                
+                                <button type="button" data-bs-toggle="modal" data-bs-target="#detayModal-@item.Id" class="gorev-adi text-left bg-transparent border-0 p-0 font-bold text-[16px] no-underline hover:text-indigo-600 transition-colors cursor-pointer @textClass">
+                                    @item.GorevAdi
+                                </button>
+                                
+                                <div class="text-[13px] mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                                    
+                                    @if(item.Oncelik == "Yüksek") {
+                                        <span class="text-red-600 bg-red-50 border border-red-100 px-2 py-0.5 rounded flex items-center gap-1 font-bold"><i class="bi bi-arrow-up-short"></i> Yüksek</span>
+                                    } else if(item.Oncelik == "Orta") {
+                                        <span class="text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded flex items-center gap-1 font-bold"><i class="bi bi-dash"></i> Orta</span>
+                                    } else {
+                                        <span class="text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded flex items-center gap-1 font-bold"><i class="bi bi-arrow-down-short"></i> Düşük</span>
+                                    }
+                                    
+                                    <span class="text-slate-600 font-medium flex items-center gap-1">
+                                        <i class="bi bi-calendar3"></i> @item.Tarih.ToString("dd MMM yyyy")
+                                    </span>
+                                    
+                                    @if(item.DurumAktifMi && item.Tarih.Date < DateTime.Now.Date) {
+                                        <span class="text-red-500 font-bold ml-1 flex items-center gap-1"><i class="bi bi-exclamation-circle"></i> Gecikti</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1 sm:gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button type="button" data-bs-toggle="modal" data-bs-target="#detayModal-@item.Id" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-indigo-600 transition-colors border-0 bg-transparent cursor-pointer" title="Detaylar"><i class="bi bi-eye-fill"></i></button>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-indigo-600 transition-colors"><i class="bi bi-pencil-fill"></i></a>
+                            <button onclick="islemOnayi('/Gorev/Delete/@item.Id', 'sil')" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors border-0 bg-transparent cursor-pointer"><i class="bi bi-trash-fill"></i></button>
+                        </div>
+                        
+                    </div>
+
+                    <div class="modal fade" id="detayModal-@item.Id" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content border border-slate-200 shadow-2xl rounded-3xl overflow-hidden bg-white">
+                                <div class="p-4 flex justify-between items-center text-white bg-gradient-to-r from-purple-500 to-indigo-600">
+                                    <h5 class="modal-title font-bold flex items-center gap-2 m-0 text-lg">
+                                        <i class="bi bi-card-text"></i> Görev Detayları
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body p-6">
+                                    <div class="mb-4">
+                                        <small class="text-indigo-500 font-bold uppercase tracking-wider text-[10px]">Görev Başlığı</small>
+                                        <h4 class="font-black text-slate-800 text-xl mt-1">@item.GorevAdi</h4>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <small class="text-indigo-500 font-bold uppercase tracking-wider text-[10px]">Açıklama / Detaylar</small>
+                                        <div class="mt-1 p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">
+                                            @(string.IsNullOrEmpty(item.Aciklama) ? "Bu görev için henüz bir açıklama girilmemiş." : item.Aciklama)
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                        <div>
+                                            <small class="text-slate-500 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Durum</small>
+                                            @if(!item.DurumAktifMi)
+                                            {
+                                                <span class="bg-emerald-50 text-emerald-600 border border-emerald-100 px-3 py-1.5 rounded-lg text-[11px] font-bold inline-flex items-center gap-1"><i class="bi bi-check-circle-fill"></i> Tamamlandı</span>
+                                            }
+                                            else if (item.Tarih.Date < DateTime.Now.Date)
+                                            {
+                                                <span class="bg-red-50 text-red-600 border border-red-100 px-3 py-1.5 rounded-lg text-[11px] font-bold inline-flex items-center gap-1"><i class="bi bi-exclamation-circle-fill"></i> Gecikti</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="bg-amber-50 text-amber-600 border border-amber-100 px-3 py-1.5 rounded-lg text-[11px] font-bold inline-flex items-center gap-1"><i class="bi bi-hourglass-split"></i> Bekliyor</span>
+                                            }
+                                        </div>
+                                        <div>
+                                            <small class="text-slate-500 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Öncelik</small>
+                                            @if(item.Oncelik == "Yüksek") {
+                                                <span class="bg-red-50 text-red-600 border border-red-100 px-3 py-1.5 rounded-lg text-[11px] font-bold inline-flex items-center gap-1"><i class="bi bi-arrow-up-short"></i> Yüksek</span>
+                                            } else if(item.Oncelik == "Orta") {
+                                                <span class="bg-amber-50 text-amber-600 border border-amber-100 px-3 py-1.5 rounded-lg text-[11px] font-bold inline-flex items-center gap-1"><i class="bi bi-dash"></i> Orta</span>
+                                            } else {
+                                                <span class="bg-emerald-50 text-emerald-600 border border-emerald-100 px-3 py-1.5 rounded-lg text-[11px] font-bold inline-flex items-center gap-1"><i class="bi bi-arrow-down-short"></i> Düşük</span>
+                                            }
+                                        </div>
+                                        <div class="col-span-2 mt-1 pt-3 border-t border-slate-200">
+                                            <small class="text-slate-500 font-bold uppercase tracking-wider text-[10px] block mb-1">Tarih</small>
+                                            <strong class="text-slate-800 text-sm"><i class="bi bi-calendar3 me-1 text-indigo-500"></i> @item.Tarih.ToString("dd MMMM yyyy")</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-t-0 bg-white p-4 rounded-b-3xl flex justify-end">
+                                    <button type="button" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 px-6 rounded-xl transition-colors text-sm border-0 cursor-pointer border border-slate-200" data-bs-dismiss="modal">Kapat</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Klavyeye her basıldığında tetiklenir
+            $("#gorevSayfasiAra").on("keyup", function() {
+                // Kullanıcının yazdığı metni küçült (Büyük/küçük harf duyarlılığını kaldırır)
+                var value = $(this).val().toLowerCase();
+                
+                // gorev-satiri class'ına sahip tüm görev bloklarını döngüye al
+                $(".gorev-satiri").filter(function() {
+                    // Görev adını al ve karşılaştır. Eşleşirse göster, eşleşmezse gizle (toggle)
+                    var gorevIsmi = $(this).find(".gorev-adi").text().toLowerCase();
+                    $(this).toggle(gorevIsmi.indexOf(value) > -1);
+                });
+            });
+        });
+    </script>
+}

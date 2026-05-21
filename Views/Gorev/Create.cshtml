@@ -1,0 +1,69 @@
+@model GorevTakipSistemi.Models.Gorev
+
+@{
+    ViewData["Title"] = "Yeni Görev Ekle";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="antigravity-card overflow-hidden form-karti" style="display: none;">
+                
+                <div class="p-6 text-white text-center bg-gradient-to-r from-purple-500 to-indigo-600">
+                    <h3 class="text-2xl font-bold mb-0"><i class="bi bi-plus-circle me-2"></i>Yeni Görev Oluştur</h3>
+                    <p class="text-indigo-100 text-sm mt-1">Sisteme yeni bir görev kaydedin.</p>
+                </div>
+
+                <div class="card-body p-5 bg-white">
+                    <form asp-action="Create" method="post">
+                        
+                        <div class="mb-4">
+                            <label asp-for="GorevAdi" class="form-label font-bold text-slate-800">Görev Başlığı</label>
+                            <input asp-for="GorevAdi" class="antigravity-input form-control form-control-lg text-slate-800 placeholder-slate-400 py-3" placeholder="Örn: Sunum dosyasını hazırla..." required />
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Aciklama" class="form-label font-bold text-slate-800">Görev Detayları</label>
+                            <textarea asp-for="Aciklama" class="antigravity-input form-control text-slate-800 placeholder-slate-400 py-3" rows="4" placeholder="Görev ile ilgili notlarınızı buraya yazabilirsiniz..."></textarea>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label asp-for="Tarih" class="form-label font-bold text-slate-800">Son Teslim Tarihi</label>
+                            <input asp-for="Tarih" type="date" class="antigravity-input form-control form-control-lg text-slate-800 py-3" required />
+                            <span asp-validation-for="Tarih" class="text-red-500 text-xs"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Oncelik" class="form-label font-bold text-slate-800">Önem Derecesi (Öncelik)</label>
+                            <select asp-for="Oncelik" class="antigravity-input form-select form-select-lg text-slate-800 py-3">
+                                <option value="Düşük">Düşük Öncelik</option>
+                                <option value="Orta" selected>Orta Öncelik</option>
+                                <option value="Yüksek">🔥 Yüksek Öncelik</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col sm:flex-row items-center justify-between mt-8 pt-6 border-t border-slate-100 gap-4">
+            <a asp-action="Index" class="bg-white hover:bg-slate-50 shadow-md hover:shadow-lg rounded-full px-5 py-3 transition-all hover:-translate-y-1 text-slate-800 font-medium text-sm flex items-center gap-2 no-underline w-full sm:w-auto justify-center">
+                <i class="bi bi-arrow-left"></i> Listeye Dön
+            </a>
+            
+            <button type="submit" class="antigravity-btn font-bold py-3 px-8 flex items-center gap-2 w-full sm:w-auto justify-center">
+                Kaydet <i class="bi bi-check2"></i>
+            </button>
+        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Formu aşağıdan yukarı doğru kaydırarak gösterme efekti
+            $('.form-karti').css({ 'margin-top': '50px', 'opacity': '0', 'display': 'block' })
+                .animate({ 'margin-top': '0px', 'opacity': '1' }, 600);
+        });
+    </script>
+}

@@ -1,0 +1,75 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Yeni Şifre Belirle";
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GorevLab - Yeni Şifre</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        indigo: { 50: '#f0f5fa', 100: '#e1ebf5', 500: '#3B8AC4', 600: '#345DA7' },
+                        purple: { 500: '#4BB4DE' },
+                        slate: { 50: '#faf6f3' }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="~/css/site.css" />
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 flex items-center justify-center min-h-screen relative z-0">
+    <!-- Floating background decorative blobs - Ocean Palette -->
+    <div class="fixed top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-[#4BB4DE]/40 rounded-full mix-blend-multiply filter blur-[100px] opacity-80 animate-blob pointer-events-none -z-10"></div>
+    <div class="fixed top-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-[#3B8AC4]/40 rounded-full mix-blend-multiply filter blur-[100px] opacity-80 animate-blob pointer-events-none -z-10" style="animation-delay: 2s;"></div>
+    <div class="fixed bottom-[-10%] left-[20%] w-[40rem] h-[40rem] bg-[#345DA7]/40 rounded-full mix-blend-multiply filter blur-[100px] opacity-80 animate-blob pointer-events-none -z-10" style="animation-delay: 4s;"></div>
+    <div class="antigravity-card p-8 sm:p-10 w-full max-w-md animate-fade-in-up">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-[#345DA7] mb-2">
+                GorevLab.
+            </h1>
+            <h2 class="text-3xl font-black text-slate-800 tracking-tight mt-4">Yeni Şifre Belirle</h2>
+            <p class="text-sm text-slate-600 mt-2">Lütfen hesabınız için güvenli ve yeni bir şifre belirleyin.</p>
+        </div>
+
+        <form asp-action="SifreSifirla" method="post" class="space-y-4">
+            <input type="hidden" name="email" value="@ViewBag.Email" />
+            <input type="hidden" name="kod" value="@ViewBag.Kod" />
+            
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">Yeni Şifre</label>
+                <input type="password" name="yeniSifre" required class="antigravity-input w-full py-3 text-sm" />
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">Yeni Şifre (Tekrar)</label>
+                <input type="password" name="yeniSifreTekrar" required class="antigravity-input w-full py-3 text-sm" />
+            </div>
+
+            <button type="submit" class="antigravity-btn w-full py-3 font-bold mt-4">
+                Şifremi Güncelle
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, background: '#ffffff', color: '#1e293b' });
+        @if (TempData["Success"] != null) { <text>Toast.fire({ icon: 'success', title: '@Html.Raw(TempData["Success"])' });</text> }
+        @if (TempData["Error"] != null) { <text>Toast.fire({ icon: 'error', title: '@Html.Raw(TempData["Error"])' });</text> }
+    </script>
+</body>
+</html>

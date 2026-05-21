@@ -1,0 +1,78 @@
+@model List<GorevTakipSistemi.Models.SistemLog>
+@{
+    ViewData["Title"] = "Sistem Logları";
+}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+    <div class="sm:flex sm:items-center justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-bold leading-7 text-slate-800 sm:truncate sm:text-3xl sm:tracking-tight">Sistem Logları</h2>
+            <p class="mt-1 text-sm text-slate-500">Sistemdeki tüm yönetici işlemlerini ve kritik hareketleri buradan izleyebilirsiniz.</p>
+        </div>
+        <div class="mt-4 sm:ml-16 sm:mt-0 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            <div class="relative w-full sm:w-64">
+                <input type="text" id="logAra" class="antigravity-input pl-10 w-full" placeholder="Kullanıcı veya işlem ara...">
+                <i class="bi bi-search absolute left-3.5 top-3.5 text-slate-400"></i>
+            </div>
+            <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-[#345DA7] ring-1 ring-inset ring-indigo-200 whitespace-nowrap">
+                <i class="fa-solid fa-shield-halved mr-1"></i> Sadece Kurucu
+            </span>
+        </div>
+    </div>
+
+    <div class="mt-8 flow-root">
+        <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                <div class="antigravity-card overflow-hidden">
+                    <table class="min-w-full divide-y divide-[#e2e8f0]">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-slate-700 sm:pl-6">Tarih / Saat</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-slate-700">Kullanıcı</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-slate-700">Yapılan İşlem</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-slate-700">IP Adresi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#e2e8f0] bg-white">
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var log in Model)
+                                {
+                                    <tr class="transition-all hover:scale-[1.01] hover:shadow-md bg-white rounded-lg">
+                                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-slate-500 sm:pl-6">@log.IslemTarihi.ToString("dd.MM.yyyy HH:mm:ss")</td>
+                                        <td class="whitespace-nowrap px-3 py-4 text-sm font-bold text-slate-700">@log.KullaniciAdi</td>
+                                        <td class="px-3 py-4 text-sm text-slate-600">@log.YapilanIslem</td>
+                                        <td class="whitespace-nowrap px-3 py-4 text-sm text-slate-400 font-mono">@log.IpAdresi</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="py-12 text-center text-sm text-slate-500">
+                                        <i class="fa-solid fa-inbox text-3xl text-slate-400 mb-3 block"></i>
+                                        Sistemde henüz kaydedilmiş bir hareket bulunmuyor.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // CANLI LOG ARAMA
+        $("#logAra").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            $("tbody tr").filter(function() {
+                if ($(this).find("td").length > 1) { // Boş durumu atla
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                }
+            });
+        });
+    </script>
+}

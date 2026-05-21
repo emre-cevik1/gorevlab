@@ -1,0 +1,238 @@
+@model GorevTakipSistemi.Models.Ekip
+@{
+    ViewData["Title"] = Model.Ad + " - Karargah";
+    bool isLider = ViewBag.IsLider ?? false;
+}
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<div class="max-w-7xl mx-auto mt-6 px-4 mb-20">
+    <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-3xl p-8 sm:p-12 mb-8 relative overflow-hidden shadow-xl shadow-slate-200/50 border border-slate-100 text-white">
+        <div class="absolute -right-10 -top-10 opacity-10">
+            <i class="bi bi-shield-shaded text-[15rem]"></i>
+        </div>
+        
+        @if(isLider) {
+            <button onclick="ekibiSil()" class="absolute top-6 right-6 bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-sm transition-all flex items-center gap-2 shadow-lg z-20 border border-red-400/50 hover:-translate-y-1">
+                <i class="bi bi-trash3-fill"></i> Ekibi Dağıt
+            </button>
+        }
+
+        <div class="relative z-10">
+            <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase backdrop-blur-sm border border-white/20">Takım Karargahı</span>
+            <h1 class="text-3xl sm:text-5xl font-black mt-4 mb-2">@Model.Ad</h1>
+            <p class="text-indigo-100 text-sm sm:text-base max-w-2xl">@(string.IsNullOrEmpty(Model.Aciklama) ? "Bu takımın henüz bir mottosu yok." : Model.Aciklama)</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="lg:col-span-2 space-y-8">
+            
+            <div class="antigravity-card p-6">
+                <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <i class="bi bi-people-fill text-indigo-500"></i> Aktif Üyeler
+                </h3>
+                <div class="space-y-3">
+                    @foreach (var uye in Model.Uyeler.OrderByDescending(u => u.Rol == "Lider"))
+                    {
+                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200 hover:-translate-y-1 transition-all">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold border border-indigo-200 hover:-translate-y-1 transition-all">
+                                    @uye.Kullanici.Ad.Substring(0,1).ToUpper()
+                                </div>
+                                <div>
+                                    <h5 class="m-0 text-sm font-bold text-slate-800">@uye.Kullanici.Ad @uye.Kullanici.Soyad</h5>
+                                </div>
+                            </div>
+                            @if(uye.Rol == "Lider") {
+                                <span class="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-lg text-xs font-bold border border-emerald-200"><i class="bi bi-star-fill"></i> Lider</span>
+                            } else {
+                                <div class="flex items-center gap-2">
+                                    <span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs font-bold border border-slate-200">Üye</span>
+                                    @if(isLider) {
+                                        <button onclick="uyeKov(@uye.KullaniciId)" class="bg-red-50 hover:bg-red-100 hover:text-red-700 text-red-600 p-1.5 rounded-lg text-sm transition-colors border border-red-200"><i class="bi bi-person-x-fill"></i></button>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="antigravity-card p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-slate-800 m-0 flex items-center gap-2">
+                        <i class="bi bi-list-task text-indigo-500"></i> Ekip Görevleri
+                    </h3>
+                    <button onclick="$('#ekipGorevModal').modal('show')" class="antigravity-btn px-4 py-2 flex items-center gap-2 text-xs">
+                        <i class="bi bi-plus-lg"></i> Görev Tanımla
+                    </button>
+                </div>
+
+                <div class="space-y-3">
+                    @if (Model.Gorevler != null && Model.Gorevler.Any())
+                    {
+                        foreach (var g in Model.Gorevler.OrderByDescending(x => x.DurumAktifMi).ThenByDescending(x => x.Tarih))
+                        {
+                            <div onclick="gorevDetayGetir(@g.Id)" class="cursor-pointer flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200 group hover:border-indigo-300 transition-all hover:-translate-y-1 @(g.DurumAktifMi ? "" : "opacity-60")">
+                                <div>
+                                    <h5 class="m-0 text-sm font-bold text-slate-800 @(g.DurumAktifMi ? "" : "line-through text-slate-400")">@g.GorevAdi</h5>
+                                    <p class="text-[11px] text-slate-600 m-0"><i class="bi bi-calendar-event"></i> @g.Tarih.ToString("dd.MM.yyyy")</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    @if (g.DurumAktifMi) {
+                                        <span class="text-[10px] font-black bg-indigo-50 text-indigo-600 px-2 py-1 rounded-md uppercase border border-indigo-200">Aktif</span>
+                                        <button onclick="event.stopPropagation(); gorevBitir(@g.Id)" class="text-[10px] font-black bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md hover:bg-emerald-200 shadow-sm transition-all">Bitir</button>
+                                    } else {
+                                        <span class="text-[10px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md uppercase border border-emerald-200">Tamamlandı</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    } else {
+                        <div class="text-center py-10 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
+                            <i class="bi bi-clipboard-x text-3xl text-slate-400 block mb-2 hover:-translate-y-1 transition-all"></i>
+                            <p class="text-xs text-slate-600 font-medium">Henüz bir görev yok.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div>
+            @if(isLider) {
+                <div class="antigravity-card p-6 mb-6">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="bi bi-person-plus-fill text-indigo-500"></i> Takım Arkadaşı Bul
+                    </h3>
+                    <div class="relative mb-4">
+                        <input type="text" id="kullaniciArama" class="antigravity-input w-full" placeholder="Kullanıcı adı...">
+                        <div id="aramaSpinner" class="absolute right-3 top-3 hidden"><div class="spinner-border spinner-border-sm text-indigo-500"></div></div>
+                    </div>
+                    <div id="aramaSonuclari" class="space-y-2"></div>
+                </div>
+            }
+
+            <div class="antigravity-card p-6">
+                <h3 class="text-sm font-bold mb-4 uppercase tracking-wider text-slate-600">Bekleyen Davetler</h3>
+                @{ var bekleyenler = Model.Davetler?.Where(d => d.Durum == "Bekliyor").ToList() ?? new List<GorevTakipSistemi.Models.EkipDavet>(); }
+                @if(bekleyenler.Any()) {
+                    <div class="space-y-3">
+                        @foreach(var davet in bekleyenler) {
+                            <div class="flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-200 hover:-translate-y-1 transition-all">
+                                <div class="text-sm font-semibold text-slate-700">@davet.Alici.KullaniciAdi</div>
+                                <span class="text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-1 rounded-md border border-amber-200">Bekleniyor</span>
+                            </div>
+                        }
+                    </div>
+                } else {
+                    <div class="text-center text-sm text-slate-600 italic py-4">Bekleyen bir davet yok.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ekipGorevModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content antigravity-card">
+            <div class="modal-header border-0 p-6 pb-0"><h5 class="modal-title font-black text-slate-800">Yeni Ekip Görevi</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body p-6 space-y-4">
+                <div><label class="text-xs font-bold text-slate-600 mb-1 block">Başlık</label><input type="text" id="eg_Ad" class="antigravity-input w-full"></div>
+                <div><label class="text-xs font-bold text-slate-600 mb-1 block">Açıklama</label><textarea id="eg_Aciklama" rows="3" class="antigravity-input w-full resize-none"></textarea></div>
+                <div><label class="text-xs font-bold text-slate-600 mb-1 block">Tarih</label><input type="date" id="eg_Tarih" class="antigravity-input w-full" value="@DateTime.Now.ToString("yyyy-MM-dd")"></div>
+            </div>
+            <div class="modal-footer border-0 p-6 pt-0"><button type="button" onclick="ekipGorevKaydet()" class="w-full antigravity-btn py-3">Görevi Yayınla</button></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="gorevDetayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content antigravity-card">
+            <div class="modal-header border-0 p-6 pb-0"><h5 class="modal-title font-black text-slate-800">Görev Detayı</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body p-6 space-y-4">
+                <input type="hidden" id="edit_GorevId">
+                <div><label class="text-xs font-bold text-slate-600 mb-1 block">Görev Başlığı</label><input type="text" id="edit_Ad" class="antigravity-input w-full @(isLider ? "" : "bg-slate-100 cursor-not-allowed opacity-60")" @(isLider ? "" : "readonly")></div>
+                <div><label class="text-xs font-bold text-slate-600 mb-1 block">Açıklama</label><textarea id="edit_Aciklama" rows="4" class="antigravity-input w-full resize-none @(isLider ? "" : "bg-slate-100 cursor-not-allowed opacity-60")" @(isLider ? "" : "readonly")></textarea></div>
+                <div><label class="text-xs font-bold text-slate-600 mb-1 block">Teslim Tarihi</label><input type="date" id="edit_Tarih" class="antigravity-input w-full @(isLider ? "" : "bg-slate-100 cursor-not-allowed opacity-60")" @(isLider ? "" : "readonly")></div>
+            </div>
+            @if (isLider) {
+                <div class="modal-footer border-0 p-6 pt-0 flex gap-3">
+                    <button type="button" onclick="ekipGorevSil()" class="flex-1 bg-red-50 text-red-600 font-bold py-3 rounded-full hover:bg-red-100 transition-all border border-red-200">Sil</button>
+                    <button type="button" onclick="ekipGorevGuncelle()" class="flex-[2] antigravity-btn py-3">Güncelle</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 1500, timerProgressBar: true });
+    const mevcutEkipId = @Model.Id;
+
+    // --- GÖREV DETAY ÇEK ---
+    function gorevDetayGetir(id) {
+        $.get('/Ekip/GorevGetir/' + id, function (data) {
+            $("#edit_GorevId").val(data.id);
+            $("#edit_Ad").val(data.gorevAdi);
+            $("#edit_Aciklama").val(data.aciklama);
+            $("#edit_Tarih").val(data.tarih);
+            $("#gorevDetayModal").modal('show');
+        });
+    }
+
+    // --- GÖREV GÜNCELLE (LİDER) ---
+    function ekipGorevGuncelle() {
+        const data = { id: $("#edit_GorevId").val(), gorevAdi: $("#edit_Ad").val(), aciklama: $("#edit_Aciklama").val(), tarih: $("#edit_Tarih").val() };
+        $.post('/Ekip/EkipGorevGuncelle', data, function (res) { if (res.success) { Toast.fire({ icon: 'success', title: res.message }).then(() => location.reload()); } });
+    }
+
+    // --- GÖREV SİL (LİDER) ---
+    function ekipGorevSil() {
+        const id = $("#edit_GorevId").val();
+        Swal.fire({ title: 'Emin misin?', text: "Görev silinecek!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Sil!' }).then((result) => {
+            if (result.isConfirmed) { $.post('/Ekip/EkipGorevSil', { id: id }, function (res) { if (res.success) { Toast.fire({ icon: 'success', title: res.message }).then(() => location.reload()); } }); }
+        });
+    }
+
+    // --- DİĞER FONKSİYONLAR ---
+    function ekipGorevKaydet() {
+        const data = { ekipId: mevcutEkipId, gorevAdi: $("#eg_Ad").val(), aciklama: $("#eg_Aciklama").val(), tarih: $("#eg_Tarih").val() };
+        if (!data.gorevAdi) { Toast.fire({ icon: 'warning', title: 'Başlık şart!' }); return; }
+        $.post('/Ekip/EkipGorevEkle', data, function (res) { if (res.success) { Toast.fire({ icon: 'success', title: 'Eklendi!' }).then(() => location.reload()); } });
+    }
+
+    function gorevBitir(id) {
+        $.post('/Ekip/GorevDurumGuncelle', { gorevId: id }, function(res) { if(res.success) { Toast.fire({ icon: 'success', title: res.message }).then(()=>location.reload()); } });
+    }
+
+    function uyeKov(uyeId) {
+        Swal.fire({ title: 'Kovulsun mu?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Evet!', confirmButtonColor: '#ef4444' }).then((result) => {
+            if (result.isConfirmed) { $.post('/Ekip/UyeCikar', { ekipId: mevcutEkipId, uyeId: uyeId }, function(res) { if(res.success) { location.reload(); } }); }
+        });
+    }
+
+    function ekibiSil() {
+        Swal.fire({ title: 'EKİBİ DAĞIT?', text: "Her şey silinecek!", icon: 'error', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((result) => {
+            if (result.isConfirmed) { $.post('/Ekip/EkipSil', { ekipId: mevcutEkipId }, function(res) { if(res.success) { window.location.href = '/Ekip/Index'; } }); }
+        });
+    }
+
+    let aramaZamanlayici;
+    $("#kullaniciArama").on("keyup", function () {
+        clearTimeout(aramaZamanlayici);
+        var q = $(this).val(); var sonucKutusu = $("#aramaSonuclari");
+        if (q.length < 3) { sonucKutusu.empty(); return; }
+        $("#aramaSpinner").removeClass("hidden");
+        aramaZamanlayici = setTimeout(function () {
+            $.get('/Ekip/KullaniciAra', { q: q, ekipId: mevcutEkipId }, function (data) {
+                sonucKutusu.empty(); $("#aramaSpinner").addClass("hidden");
+                data.forEach(user => { sonucKutusu.append(`<div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 transition-colors hover:-translate-y-1"><div class="text-sm font-bold text-slate-800">${user.kullaniciAdi}</div><button onclick="davetEt(${user.id})" class="text-xs antigravity-btn px-3 py-1.5">Davet Et</button></div>`); });
+            });
+        }, 500);
+    });
+
+    function davetEt(aliciId) { $.post('/Ekip/DavetGonder', { ekipId: mevcutEkipId, aliciId: aliciId }, function (res) { if(res.success) { location.reload(); } }); }
+</script>

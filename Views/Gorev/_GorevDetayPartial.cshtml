@@ -1,0 +1,61 @@
+@model GorevTakipSistemi.Models.Gorev
+
+<div class="modal-header border-b border-slate-200 p-5 rounded-t-2xl bg-gradient-to-r from-purple-500 to-indigo-600">
+    <h5 class="modal-title font-extrabold text-white text-lg flex items-center gap-2">
+        <i class="bi bi-card-checklist text-indigo-100"></i> Görev Detayı
+    </h5>
+    <button type="button" class="btn-close btn-close-white text-sm" data-bs-dismiss="modal" aria-label="Kapat"></button>
+</div>
+
+<div class="modal-body p-6 bg-white">
+    <div class="mb-5">
+        <h4 class="text-xl font-black text-slate-800 mb-2">@Model.GorevAdi</h4>
+        
+        <div class="flex flex-wrap items-center gap-2 text-sm mt-3">
+            @if(Model.DurumAktifMi) {
+                <span class="bg-amber-50 text-amber-600 px-3 py-1.5 rounded-lg font-bold border border-amber-100">
+                    <i class="bi bi-activity"></i> Devam Ediyor
+                </span>
+            } else {
+                <span class="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg font-bold border border-emerald-100">
+                    <i class="bi bi-check2-all"></i> Tamamlandı
+                </span>
+            }
+            <span class="text-slate-600 font-semibold bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                <i class="bi bi-calendar3"></i> @Model.Tarih.ToString("dd.MM.yyyy")
+            </span>
+        </div>
+    </div>
+
+    @if(!string.IsNullOrEmpty(Model.Aciklama)) {
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-2">
+            <h6 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Görev Açıklaması</h6>
+            <p class="text-slate-700 text-sm m-0 leading-relaxed whitespace-pre-wrap">@Model.Aciklama</p>
+        </div>
+    } else {
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-2 border-dashed text-center">
+            <p class="text-slate-400 text-sm m-0 italic">Bu görev için detaylı bir açıklama girilmemiş.</p>
+        </div>
+    }
+</div>
+
+<div class="modal-footer border-t border-slate-200 p-4 bg-slate-50 rounded-b-2xl flex flex-col sm:flex-row justify-between items-center gap-3">
+    
+    <div class="w-full sm:w-auto text-center sm:text-left">
+        <button type="button" onclick="islemOnayi('/Gorev/Delete/@Model.Id', 'sil')" class="inline-flex items-center gap-1.5 text-red-500 hover:text-red-600 font-bold text-sm px-4 py-3 rounded-xl hover:bg-red-50 transition-colors border-0 bg-transparent cursor-pointer w-full sm:w-auto justify-center sm:justify-start">
+            <i class="bi bi-trash3"></i> Çöpe At
+        </button>
+    </div>
+
+    <div class="flex gap-2 w-full sm:w-auto justify-end">
+        <a href="/Gorev/Edit/@Model.Id" class="bg-white hover:bg-slate-50 shadow-md hover:shadow-lg rounded-full px-5 py-3 transition-all hover:-translate-y-1 text-slate-800 font-bold text-sm no-underline inline-flex items-center gap-1.5">
+            <i class="bi bi-pencil-square"></i> Düzenle
+        </a>
+        
+        @if(Model.DurumAktifMi) {
+            <a href="/Gorev/Tamamla/@Model.Id" class="antigravity-btn font-bold text-sm px-5 py-3 no-underline inline-flex items-center gap-1.5">
+                <i class="bi bi-check-lg text-lg"></i> Bitir
+            </a>
+        }
+    </div>
+</div>

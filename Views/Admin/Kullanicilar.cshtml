@@ -1,0 +1,331 @@
+@model List<GorevTakipSistemi.Models.KullaniciYonetimViewModel>
+@using System.Linq
+
+@{
+    ViewData["Title"] = "Admin Paneli";
+}
+
+<div class="container mt-4">
+    @if (TempData["Hata"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Hata!</strong> @TempData["Hata"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+            <h2 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tight">Sistem Yönetimi</h2>
+            <p class="text-slate-500 font-medium italic">Toplam @Model.Count kayıtlı kullanıcı yönetiliyor.</p>
+        </div>
+        
+        <div class="flex flex-col lg:flex-row items-center gap-4 w-full md:w-auto">
+            <div class="relative w-full lg:w-64">
+                <input type="text" id="kullaniciAra" class="antigravity-input pl-10 w-full" placeholder="Kullanıcı adı, e-posta ara...">
+                <i class="bi bi-search absolute left-3.5 top-3.5 text-slate-400"></i>
+            </div>
+            <div class="flex w-full sm:w-auto gap-3">
+                <div class="flex-1 antigravity-card px-6 py-3 text-center">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Toplam Kullanıcı</p>
+                    <p class="text-2xl font-black text-[#345DA7]">@Model.Count</p>
+                </div>
+                <div class="flex-1 antigravity-card px-6 py-3 text-center">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Yasaklı Kullanıcı</p>
+                    <p class="text-2xl font-black text-red-500">@Model.Where(x => x.IsBanned).Count()</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="lg:hidden space-y-4">
+        @foreach (var user in Model)
+        {
+            var cardClass = user.IsBanned ? "bg-red-50 text-red-600 border-red-200" : "";
+            <div class="antigravity-card p-5 @cardClass">
+                
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-lg shadow-sm border border-indigo-200">
+                            @user.AdSoyad.Substring(0, 1).ToUpper()
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm mb-0">
+                                @user.AdSoyad
+                                @if(user.IsBanned) {
+                                    <span class="ml-1 text-[9px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-200 uppercase tracking-widest align-middle">Yasaklı</span>
+                                }
+                            </h4>
+                            <p class="text-xs text-slate-500 font-medium">@("@" + user.KullaniciAdi)</p>
+                            @if(user.IsBanned) {
+                                <div class="mt-2 text-[11px] text-red-600 bg-red-50 text-red-600 p-2.5 rounded-xl border border-red-200">
+                                    <strong class="text-red-600">Neden:</strong> @user.BanNedeni <br/>
+                                    <strong class="text-red-600">Bitiş:</strong> @(user.BanBitisTarihi?.ToString("dd.MM.yyyy HH:mm"))
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div>
+                        @if (user.Rol == GorevTakipSistemi.Models.KullaniciRol.Owner)
+                        {
+                            <span class="inline-flex items-center gap-1 bg-slate-100 text-amber-600 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase ring-1 ring-inset ring-slate-200 shadow-md">
+                                <i class="fa-solid fa-crown"></i> Kurucu
+                            </span>
+                        }
+                        else if (user.Rol == GorevTakipSistemi.Models.KullaniciRol.Admin)
+                        {
+                            <span class="inline-flex items-center gap-1 bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-lg text-[9px] font-black ring-1 ring-inset ring-crimson-800 uppercase">
+                                <i class="bi bi-shield-lock-fill"></i> Admin
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="inline-flex items-center gap-1 bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase">
+                                <i class="bi bi-person"></i> Kullanıcı
+                            </span>
+                        }
+                    </div>
+                </div>
+
+                @{ var yuzdeM = user.ToplamGorevSayisi > 0 ? (user.TamamlananGorevSayisi * 100 / user.ToplamGorevSayisi) : 0; }
+                <div class="mb-5 bg-slate-100 p-3 rounded-xl border border-slate-200">
+                    <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1.5 px-1">
+                        <span>Görev Durumu: @user.TamamlananGorevSayisi / @user.ToplamGorevSayisi</span>
+                        <span>@yuzdeM%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div class="bg-gradient-to-r from-purple-500 to-indigo-600 h-full rounded-full transition-all duration-1000" style="width: @yuzdeM%"></div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 border-t border-slate-200 pt-4">
+                    <a asp-controller="Admin" asp-action="KullaniciGorevleri" asp-route-id="@user.Id" class="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all text-xs font-bold no-underline" title="Görevleri Gör">
+                        <i class="bi bi-card-checklist text-sm"></i> Görevler
+                    </a>
+
+                    @if (user.Rol != GorevTakipSistemi.Models.KullaniciRol.Owner)
+                    {
+                        @if (user.IsBanned)
+                        {
+                            <a asp-action="BanKaldir" asp-route-id="@user.Id" class="w-10 flex items-center justify-center rounded-xl transition-all text-sm no-underline border-0 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white" title="Banı Kaldır">
+                                <i class="bi bi-unlock-fill"></i>
+                            </a>
+                        }
+                        else
+                        {
+                            <button onclick="banlaFormuGoster('@user.Id')" class="w-10 flex items-center justify-center rounded-xl transition-all text-sm border-0 bg-amber-50 text-amber-600 hover:bg-orange-500 hover:text-white cursor-pointer" title="Sistemden Yasakla">
+                                <i class="bi bi-slash-circle"></i>
+                            </button>
+                        }
+
+                        <a asp-action="RolDegistir" asp-route-id="@user.Id" class="w-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all text-sm no-underline" title="Rolü Değiştir">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </a>
+
+                        <button onclick="kullaniciSilOnayi('@user.Id')" class="w-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all text-sm border-0" title="Kullanıcıyı Sil">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="flex-1 flex items-center justify-center py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-400 text-xs font-bold uppercase tracking-widest">
+                            <i class="fa-solid fa-lock me-2"></i> Dokunulmaz
+                        </div>
+                    }
+                </div>
+
+            </div>
+        }
+    </div>
+
+    <div class="hidden lg:block antigravity-card overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="px-8 py-5 text-xs font-black text-slate-500 uppercase tracking-widest border-0">Kullanıcı Bilgileri</th>
+                        <th class="px-6 py-5 text-center text-xs font-black text-slate-500 uppercase tracking-widest border-0">Yetki</th>
+                        <th class="px-6 py-5 text-center text-xs font-black text-slate-500 uppercase tracking-widest border-0">İlerleme / Yük</th>
+                        <th class="px-8 py-5 text-end text-xs font-black text-slate-500 uppercase tracking-widest border-0">Eylemler</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[#e2e8f0]">
+                    @foreach (var user in Model)
+                    {
+                        var rowClass = user.IsBanned ? "bg-red-50 text-red-600" : "";
+                        <tr class="group transition-all hover:scale-[1.01] hover:shadow-md bg-white rounded-lg @rowClass">
+                            <td class="px-8 py-5 border-0">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-lg shadow-sm border border-indigo-200">
+                                        @user.AdSoyad.Substring(0, 1).ToUpper()
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-slate-800 mb-0">
+                                            @user.AdSoyad
+                                            @if(user.IsBanned) {
+                                                <span class="ml-2 text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded border border-red-200 uppercase tracking-widest align-middle">Yasaklı</span>
+                                            }
+                                        </h4>
+                                        <p class="text-xs text-slate-500 font-medium mb-0 mt-1">@("@" + user.KullaniciAdi) • @user.Email</p>
+                                        @if(user.IsBanned) {
+                                            <div class="mt-2 text-xs text-red-600 bg-red-50 text-red-600 p-2 rounded-lg border border-red-200 inline-block">
+                                                <span class="font-bold">Ban Nedeni:</span> @user.BanNedeni &nbsp;|&nbsp; 
+                                                <span class="font-bold">Bitiş:</span> @(user.BanBitisTarihi?.ToString("dd.MM.yyyy HH:mm"))
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5 text-center border-0">
+                                @if (user.Rol == GorevTakipSistemi.Models.KullaniciRol.Owner)
+                                {
+                                    <span class="inline-flex items-center gap-1.5 bg-slate-100 text-amber-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase ring-1 ring-inset ring-slate-200 shadow-md">
+                                        <i class="fa-solid fa-crown"></i> Kurucu
+                                    </span>
+                                }
+                                else if (user.Rol == GorevTakipSistemi.Models.KullaniciRol.Admin)
+                                {
+                                    <span class="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg text-[10px] font-black ring-1 ring-inset ring-crimson-800 uppercase">
+                                        <i class="bi bi-shield-lock-fill"></i> Admin
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center gap-1.5 bg-slate-50 text-slate-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase">
+                                        <i class="bi bi-person"></i> Kullanıcı
+                                    </span>
+                                }
+                            </td>
+                            <td class="px-6 py-5 border-0">
+                                @{ var yuzde = user.ToplamGorevSayisi > 0 ? (user.TamamlananGorevSayisi * 100 / user.ToplamGorevSayisi) : 0; }
+                                <div class="max-w-[120px] mx-auto">
+                                    <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1 px-1">
+                                        <span>@user.TamamlananGorevSayisi/@user.ToplamGorevSayisi</span>
+                                        <span>@yuzde%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden p-[2px]">
+                                        <div class="bg-gradient-to-r from-purple-500 to-indigo-600 h-full rounded-full transition-all duration-1000 shadow-sm shadow-indigo-600/30" style="width: @yuzde%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-8 py-5 text-end border-0">
+                                <div class="flex justify-end items-center gap-2">
+                                    
+                                    <a asp-controller="Admin" asp-action="KullaniciGorevleri" asp-route-id="@user.Id" class="w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm no-underline" title="Görevleri Görüntüle">
+                                        <i class="bi bi-card-checklist text-lg"></i>
+                                    </a>
+
+                                    @if (user.Rol != GorevTakipSistemi.Models.KullaniciRol.Owner)
+                                    {
+                                        @if (user.IsBanned)
+                                        {
+                                            <a asp-action="BanKaldir" asp-route-id="@user.Id" class="w-10 h-10 flex items-center justify-center rounded-xl transition-all shadow-sm no-underline border-0 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white" title="Banı Kaldır">
+                                                <i class="bi bi-unlock-fill"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <button onclick="banlaFormuGoster('@user.Id')" class="w-10 h-10 flex items-center justify-center rounded-xl transition-all shadow-sm border-0 bg-amber-50 text-amber-600 hover:bg-orange-600 hover:text-white cursor-pointer" title="Sistemden Yasakla">
+                                                <i class="bi bi-slash-circle"></i>
+                                            </button>
+                                        }
+
+                                        <a asp-action="RolDegistir" asp-route-id="@user.Id" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm no-underline" title="Rolü Değiştir">
+                                            <i class="bi bi-arrow-left-right"></i>
+                                        </a>
+                                        <button onclick="kullaniciSilOnayi('@user.Id')" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all shadow-sm border-0" title="Kullanıcıyı Sil">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="h-10 flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 rounded-xl border border-slate-200">
+                                            <i class="fa-solid fa-lock me-1"></i> Kilitli
+                                        </span>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // CANLI KULLANICI ARAMA
+        $("#kullaniciAra").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            
+            // Mobil kartlar için
+            $(".lg\\:hidden > .antigravity-card").filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+            });
+            
+            // Masaüstü tablo satırları için
+            $("tbody tr").filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+            });
+        });
+    <script>
+        function kullaniciSilOnayi(id) {
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: "Bu kullanıcıyı sildiğinizde TÜM GÖREVLERİ de silinecektir!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Evet, Sil!',
+                cancelButtonText: 'Vazgeç',
+                borderRadius: '1.5rem',
+                background: '#ffffff',
+                color: '#1e293b'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/Admin/KullaniciSil/' + id;
+                }
+            })
+        }
+
+        function banlaFormuGoster(id) {
+            Swal.fire({
+                title: 'Kullanıcıyı Uzaklaştır',
+                html: `
+                    <form id="banForm" action="/Admin/KullaniciBanla" method="post">
+                        <input type="hidden" name="id" value="${id}" />
+                        <input type="text" name="neden" id="banNedeni" class="antigravity-input swal2-input" placeholder="Uzaklaştırma Nedeni (Örn: Kural İhlali)">
+                        <div style="margin-top: 15px; text-align: left; padding: 0 20px;">
+                            <label for="banGun" style="font-weight: bold; font-size: 14px; color: #1e293b;">Ban Süresi (Gün):</label>
+                            <input type="number" name="gun" id="banGun" min="1" class="antigravity-input swal2-input" placeholder="Kaç gün uzaklaştırılacak?" style="margin-top: 5px;">
+                        </div>
+                    </form>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Banla ve Mail At',
+                cancelButtonText: 'İptal',
+                background: '#ffffff',
+                color: '#1e293b',
+                preConfirm: () => {
+                    const neden = Swal.getPopup().querySelector('#banNedeni').value;
+                    const gun = Swal.getPopup().querySelector('#banGun').value;
+                    
+                    if (!neden || !gun) {
+                        Swal.showValidationMessage(`Lütfen neden ve gün giriniz!`);
+                        return false;
+                    }
+                    return true;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('banForm').submit();
+                }
+            });
+        }
+    </script>
+}

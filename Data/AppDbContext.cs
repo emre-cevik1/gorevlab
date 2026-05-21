@@ -1,0 +1,48 @@
+using Microsoft.EntityFrameworkCore;
+using GorevTakipSistemi.Models;
+
+namespace GorevTakipSistemi.Data
+{
+    public class AppDbContext : DbContext
+    {
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+        public DbSet<Kullanici> Kullanicilar { get; set; }
+        public DbSet<Gorev> Gorevler { get; set; }
+        public DbSet<DestekMesaji> DestekMesajlari { get; set; }
+        public DbSet<SistemLog> SistemLoglari { get; set; }
+        
+        // YENİ EKLENEN EKİP TABLOLARI
+        public DbSet<Ekip> Ekipler { get; set; }
+        public DbSet<EkipUyesi> EkipUyeleri { get; set; }
+        public DbSet<EkipDavet> EkipDavetleri { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // 🛡️ SQL HATALARINI ÖNLEYEN SENIOR DOKUNUŞU (CASCADE KORUMALARI)
+            
+            // EkipDavet -> Gonderen ilişkisi
+            modelBuilder.Entity<EkipDavet>()
+                .HasOne(d => d.Gonderen)
+                .WithMany()
+                .HasForeignKey(d => d.GonderenId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // EkipDavet -> Alici ilişkisi
+            modelBuilder.Entity<EkipDavet>()
+                .HasOne(d => d.Alici)
+                .WithMany()
+                .HasForeignKey(d => d.AliciId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // EkipUyesi -> Kullanici ilişkisi
+            modelBuilder.Entity<EkipUyesi>()
+                .HasOne(e => e.Kullanici)
+                .WithMany()
+                .HasForeignKey(e => e.KullaniciId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
+    }
+}

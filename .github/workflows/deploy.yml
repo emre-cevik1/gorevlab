@@ -1,0 +1,49 @@
+name: Deploy to Turkticaret.net (Plesk)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Kodu Çek (Checkout)
+      uses: actions/checkout@v4
+
+    - name: ⚙️ .NET 8.0 Kurulumu
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    # İsteğe bağlı olarak Unit Testleriniz varsa buraya ekleyebilirsiniz:
+    # - name: 🧪 Testleri Çalıştır
+    #   run: dotnet test
+
+    - name: 🔐 Şifreleri Güvenli Şekilde Enjekte Et
+      uses: microsoft/variable-substitution@v1
+      with:
+        files: 'appsettings.json'
+      env:
+        ConnectionStrings.DefaultConnection: ${{ secrets.DB_CONNECTION_STRING }}
+        SmtpSettings.Password: ${{ secrets.SMTP_PASSWORD }}
+        RecaptchaSettings.SecretKey: ${{ secrets.RECAPTCHA_SECRET }}
+
+    - name: 📦 Projeyi Derle ve Publish Et
+      run: dotnet publish -c Release -o ./publish_output
+
+    # ASP.NET Core uygulamaları çalışırken DLL dosyaları kilitlenebilir.
+    # FTP Action, publish klasörünün içindekileri gönderir.
+    - name: 🚀 FTP ile Sunucuya Yükle
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./publish_output/
+        server-dir: /httpdocs/
+        # Sadece değişen dosyaları günceller (güvenlidir).
+        # Eğer sunucudaki tüm eski dosyaları silip sıfırdan yüklemek isterseniz aşağıdaki satırı açın:
+        # dangerous-clean-slate: true
