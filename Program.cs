@@ -12,7 +12,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add(new GorevTakipSistemi.Filters.BakimModuFilter());
+});
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30); // Oturum 30 dakika hareketsiz kalırsa kapanır

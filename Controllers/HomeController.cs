@@ -12,6 +12,15 @@ namespace GorevTakipSistemi.Controllers
 {
     public class HomeController : Controller
     {
+        // --- BAKIM SAYFASI ---
+        [HttpGet]
+        public IActionResult Bakim()
+        {
+            if (!GorevTakipSistemi.Models.SiteSettings.BakimModuAktif)
+                return RedirectToAction("Index"); // Eğer bakım modu kapalıysa, ana sayfaya at
+
+            return View();
+        }
         private readonly AppDbContext _context;
         private readonly IWebHostEnvironment _env;
 

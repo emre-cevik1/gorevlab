@@ -113,6 +113,23 @@
                                 <a asp-controller="Admin" asp-action="Loglar" class="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-full border border-slate-200 hover:bg-white hover:text-indigo-600 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 no-underline group">
                                     <i class="fa-solid fa-terminal group-hover:rotate-12 transition-transform"></i> Loglar
                                 </a>
+                                
+                                @if (GorevTakipSistemi.Models.SiteSettings.BakimModuAktif)
+                                {
+                                    <form asp-controller="Admin" asp-action="BakimModuTetikle" method="post" class="hidden md:inline-flex m-0">
+                                        <button type="submit" class="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-xs font-bold uppercase tracking-widest rounded-full border border-red-700 hover:bg-red-700 hover:shadow-lg hover:shadow-red-500/30 hover:-translate-y-1 transition-all duration-300 group">
+                                            <i class="fa-solid fa-lock group-hover:animate-pulse"></i> BAKIMDA
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form asp-controller="Admin" asp-action="BakimModuTetikle" method="post" class="hidden md:inline-flex m-0">
+                                        <button type="submit" class="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 text-xs font-bold uppercase tracking-widest rounded-full border border-emerald-200 hover:bg-white hover:text-emerald-700 hover:shadow-lg hover:shadow-emerald-500/20 hover:-translate-y-1 transition-all duration-300 group">
+                                            <i class="fa-solid fa-lock-open group-hover:rotate-12 transition-transform"></i> BAKIMA AL
+                                        </button>
+                                    </form>
+                                }
                             }
 
                             @if (Context.Session.GetInt32("KullaniciRol") == (int)GorevTakipSistemi.Models.KullaniciRol.Admin || Context.Session.GetInt32("KullaniciRol") == (int)GorevTakipSistemi.Models.KullaniciRol.Owner)

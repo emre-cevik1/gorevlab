@@ -12,7 +12,14 @@
             </h1>
             
             <h2 class="text-xl font-bold tracking-tight text-slate-800">Tekrar Hoş Geldiniz!</h2>
-            <p class="mt-1 text-sm text-slate-600">Lütfen hesabınıza giriş yapın</p>
+            <p class="mt-1 text-sm text-slate-600 mb-2">Lütfen hesabınıza giriş yapın</p>
+            
+            @if (GorevTakipSistemi.Models.SiteSettings.BakimModuAktif)
+            {
+                <div class="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-sm font-semibold mb-4 shadow-sm animate-pulse">
+                    ⚠️ Sistem şu an bakım modundadır. Sadece kurucu girişi açıktır.
+                </div>
+            }
         </div>
         
         <form class="mt-8 space-y-6" asp-action="Login" method="post">

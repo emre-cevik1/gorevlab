@@ -54,6 +54,25 @@ namespace GorevTakipSistemi.Controllers
             return View(kullanicilar);
         }
 
+        [HttpPost]
+        public IActionResult BakimModuTetikle()
+        {
+            var rol = HttpContext.Session.GetInt32("KullaniciRol") ?? 0;
+            if (rol != (int)KullaniciRol.Owner)
+            {
+                TempData["Error"] = "Bu işlem için kurucu yetkisi gereklidir.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            GorevTakipSistemi.Models.SiteSettings.BakimModuAktif = !GorevTakipSistemi.Models.SiteSettings.BakimModuAktif;
+
+            TempData["Success"] = GorevTakipSistemi.Models.SiteSettings.BakimModuAktif 
+                ? "Sistem başarıyla BAKIM moduna alındı." 
+                : "Sistem tekrar YAYINA alındı.";
+                
+            return Redirect(Request.Headers["Referer"].ToString() ?? "/Admin/Loglar");
+        }
+
         // --- SÜRELİ VE NEDENLİ BANLAMA METODU ---
         [HttpPost]
         public async Task<IActionResult> KullaniciBanla(int id, string neden, int gun)

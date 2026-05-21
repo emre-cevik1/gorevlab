@@ -45,7 +45,14 @@
                 GorevLab.
             </h1>
             <h2 class="text-3xl font-black text-slate-800 tracking-tight mt-4">Yeni Hesap Oluştur</h2>
-            <p class="text-slate-600 font-medium mt-2">Görevlerinizi yönetmeye hemen başlayın.</p>
+            <p class="text-slate-600 font-medium mt-2 mb-4">Görevlerinizi yönetmeye hemen başlayın.</p>
+            
+            @if (GorevTakipSistemi.Models.SiteSettings.BakimModuAktif)
+            {
+                <div class="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-sm font-semibold mb-4 shadow-sm animate-pulse">
+                    ⚠️ Sistem şu an bakım modundadır. Kayıt işlemleri geçici olarak durdurulmuştur.
+                </div>
+            }
         </div>
 
         <form asp-controller="Auth" asp-action="Register" method="post" class="space-y-4">
