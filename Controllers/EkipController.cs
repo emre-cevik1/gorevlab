@@ -139,6 +139,28 @@ namespace GorevTakipSistemi.Controllers
             _context.Gorevler.Add(yeniGorev);
             await _context.SaveChangesAsync();
 
+            // Ekipteki diğer üyelere bildirim gönder
+            var ekip = await _context.Ekipler.FindAsync(ekipId);
+            var digerUyeler = await _context.EkipUyeleri
+                .Where(u => u.EkipId == ekipId && u.KullaniciId != userId.Value)
+                .Select(u => u.KullaniciId)
+                .ToListAsync();
+
+            string adSoyad = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Bir ekip arkadaşın";
+
+            if (ekip != null && digerUyeler.Any())
+            {
+                foreach (var uyeId in digerUyeler)
+                {
+                    _context.Bildirimler.Add(new Bildirim {
+                        KullaniciId = uyeId,
+                        Mesaj = $"{adSoyad}, '{ekip.Ad}' ekibine yeni bir görev ekledi: {gorevAdi}",
+                        Url = $"/Ekip/Detay/{ekipId}"
+                    });
+                }
+                await _context.SaveChangesAsync();
+            }
+
             return Json(new { success = true, message = "Ekip görevi başarıyla oluşturuldu! 🎯" });
         }
 
@@ -254,6 +276,18 @@ namespace GorevTakipSistemi.Controllers
             {
                 _context.GorevTamamlamalari.Add(new GorevTamamlama { GorevId = gorevId, KullaniciId = userId.Value });
                 await _context.SaveChangesAsync();
+
+                // Görevi oluşturana bildirim gönder
+                if (gorev.KullaniciId != userId.Value)
+                {
+                    string adSoyad = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Bir ekip arkadaşın";
+                    _context.Bildirimler.Add(new Bildirim {
+                        KullaniciId = gorev.KullaniciId,
+                        Mesaj = $"{adSoyad}, '{gorev.GorevAdi}' adlı ekip görevini tamamladı! ✅",
+                        Url = $"/Ekip/Detay/{gorev.EkipId}"
+                    });
+                    await _context.SaveChangesAsync();
+                }
             }
 
             return Json(new { success = true, message = "Görev başarıyla tamamlandı! ✅" });
