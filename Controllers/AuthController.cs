@@ -196,6 +196,23 @@ namespace GorevTakipSistemi.Controllers
         [HttpGet]
         public IActionResult Login() 
         { 
+            // Eğer kullanıcı zaten giriş yapmışsa
+            if (HttpContext.Session.GetInt32("KullaniciId") != null)
+            {
+                var rol = HttpContext.Session.GetInt32("KullaniciRol") ?? 0;
+                
+                // Bakım modu açıksa ve kişi Kurucu değilse, oturumu temizle ki login sayfasını temiz görsün
+                if (GorevTakipSistemi.Models.SiteSettings.BakimModuAktif && rol != (int)KullaniciRol.Owner)
+                {
+                    HttpContext.Session.Clear();
+                }
+                else
+                {
+                    // Aksi halde anasayfaya yönlendir
+                    return RedirectToAction("Index", "Home");
+                }
+            }
+
             if (Request.Cookies.TryGetValue("HatirlananKullanici", out string hatirlananKullanici))
             {
                 ViewBag.HatirlananKullanici = hatirlananKullanici;
