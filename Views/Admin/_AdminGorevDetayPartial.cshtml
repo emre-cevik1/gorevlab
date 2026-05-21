@@ -61,10 +61,8 @@
 </div>
 
 <div class="modal-footer border-t border-slate-200 p-4 bg-slate-50 rounded-b-2xl flex justify-between items-center">
-    
-    <a href="/Admin/KullaniciGoreviSil/@Model.Id" onclick="return confirm('Bu görevi SİSTEMDEN TAMAMEN silmek istediğinize emin misiniz? Bu işlem loglanacak ve geri alınamaz.');" class="inline-flex items-center gap-1.5 antigravity-btn font-bold text-sm px-5 py-2.5 rounded-xl no-underline">
+    <button type="button" onclick="islemOnayi('/Admin/KullaniciGoreviSil/@Model.Id', 'sil')" class="inline-flex items-center gap-1.5 bg-red-500 hover:bg-red-600 text-white font-bold text-sm px-5 py-2.5 rounded-xl transition-colors border-0 cursor-pointer">
         <i class="bi bi-trash3"></i> Sistemden Sil
-    </a>
-
+    </button>
     <button type="button" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-6 rounded-xl transition-colors text-sm border border-slate-200 cursor-pointer" data-bs-dismiss="modal">Kapat</button>
 </div>
