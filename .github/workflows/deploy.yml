@@ -34,6 +34,12 @@ jobs:
     - name: 📦 Projeyi Derle ve Publish Et
       run: dotnet publish -c Release -o ./publish_output
 
+    - name: 🛑 Uygulamayı Durdur (app_offline.htm)
+      run: |
+        echo "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Sistem Güncelleniyor</title></head><body style=\"text-align: center; padding: 50px; font-family: sans-serif;\"><h1>Sistem Güncelleniyor</h1><p>Şu an yeni sürüm yükleniyor, lütfen birkaç dakika sonra sayfayı yenileyin.</p></body></html>" > app_offline.htm
+        curl -T app_offline.htm ftp://${{ secrets.FTP_SERVER }}/httpdocs/ --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}"
+        sleep 5
+
     # ASP.NET Core uygulamaları çalışırken DLL dosyaları kilitlenebilir.
     # FTP Action, publish klasörünün içindekileri gönderir.
     - name: 🚀 FTP ile Sunucuya Yükle
@@ -47,3 +53,8 @@ jobs:
         # Sadece değişen dosyaları günceller (güvenlidir).
         # Eğer sunucudaki tüm eski dosyaları silip sıfırdan yüklemek isterseniz aşağıdaki satırı açın:
         # dangerous-clean-slate: true
+
+    - name: 🟢 Uygulamayı Tekrar Başlat (app_offline sil)
+      if: always()
+      run: |
+        curl -Q "DELE /httpdocs/app_offline.htm" ftp://${{ secrets.FTP_SERVER }}/ --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" || true
