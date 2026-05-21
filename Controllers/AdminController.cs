@@ -481,6 +481,28 @@ namespace GorevTakipSistemi.Controllers
 
             return View(loglar);
         }
+        // --- ADMİN (KURUCU): LOGLARI TEMİZLE ---
+        public IActionResult LogTemizle()
+        {
+            var sessionRol = HttpContext.Session.GetInt32("KullaniciRol") ?? 0;
+            
+            // Sadece Sistem Kurucusu temizleyebilir
+            if (sessionRol != (int)KullaniciRol.Owner) 
+            {
+                TempData["Error"] = "Yetkisiz İşlem: Log kayıtlarını sadece sistem kurucusu silebilir!";
+                return RedirectToAction("Index", "Home");
+            }
+
+            var tumLoglar = _context.SistemLoglari.ToList();
+            if (tumLoglar.Any())
+            {
+                _context.SistemLoglari.RemoveRange(tumLoglar);
+                _context.SaveChanges();
+                TempData["Success"] = "Tüm sistem logları kalıcı olarak başarıyla temizlendi.";
+            }
+
+            return RedirectToAction("Loglar");
+        }
 
         // --- ADMİN: DESTEK TALEBİ SİLME ---
         public IActionResult DestekTalebiSil(int id)
