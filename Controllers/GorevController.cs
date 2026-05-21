@@ -105,7 +105,7 @@ namespace GorevTakipSistemi.Controllers
             if (ekip != null)
             {
                 var uyeler = _context.EkipUyeleri
-                                     .Where(eu => eu.EkipId == ekip.Id && eu.Durum == "KabulEdildi")
+                                     .Where(eu => eu.EkipId == ekip.Id)
                                      .Select(eu => eu.Kullanici)
                                      .ToList();
                 
