@@ -7,24 +7,24 @@
 <div class="max-w-6xl mx-auto mt-6 px-4 mb-12">
     <div class="antigravity-card overflow-hidden">
         
-        <div class="bg-[#1a1a2e] text-white p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-3 font-bold text-lg">
-                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-slate-200">
-                    <i class="bi bi-person-badge text-indigo-600"></i>
+        <div class="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200 p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4 font-bold text-lg">
+                <div class="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center border border-indigo-100 shadow-sm">
+                    <i class="bi bi-person-badge text-indigo-600 text-xl"></i>
                 </div>
                 <div>
-                    <span class="block text-sm text-slate-500 font-normal">Kullanıcı Görevleri</span>
-                    <span class="text-slate-800">@ViewBag.KullaniciAdSoyad</span>
+                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Kullanıcı Görevleri</span>
+                    <span class="text-slate-800 text-xl">@ViewBag.KullaniciAdSoyad</span>
                 </div>
             </div>
             
             <div class="flex items-center gap-4 w-full sm:w-auto">
-                <div class="relative w-full sm:w-64">
-                    <input type="text" id="kullaniciGorevAra" class="antigravity-input w-full pl-9 pr-3 py-2 text-sm" placeholder="Görev ismine göre ara...">
-                    <i class="bi bi-search absolute left-3 top-2.5 text-slate-500"></i>
+                <div class="relative w-full sm:w-72">
+                    <input type="text" id="kullaniciGorevAra" class="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition-all" placeholder="Görev ismine göre ara...">
+                    <i class="bi bi-search absolute left-3.5 top-3 text-slate-400"></i>
                 </div>
 
-                <a asp-action="Kullanicilar" class="hidden sm:flex text-slate-600 hover:text-indigo-600 no-underline text-sm font-semibold items-center gap-1 shrink-0 transition-colors">
+                <a asp-action="Kullanicilar" class="hidden sm:flex px-4 py-2 bg-white border border-slate-200 rounded-xl shadow-sm text-slate-600 hover:text-indigo-600 hover:border-indigo-200 no-underline text-sm font-semibold items-center gap-2 shrink-0 transition-all">
                     <i class="bi bi-arrow-left"></i> Geri Dön
                 </a>
             </div>
