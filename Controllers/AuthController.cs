@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Http;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory; // 🔥 IP Takibi için eklendi
-using Microsoft.AspNetCore.DataProtection;
 
 namespace GorevTakipSistemi.Controllers
 {
@@ -20,14 +19,12 @@ namespace GorevTakipSistemi.Controllers
         private readonly AppDbContext _context;
         private readonly IMemoryCache _cache; // 🔥 Hafıza motoru eklendi
         private readonly IConfiguration _config;
-        private readonly IDataProtector _protector;
 
-        public AuthController(AppDbContext context, IMemoryCache cache, IConfiguration config, IDataProtectionProvider provider)
+        public AuthController(AppDbContext context, IMemoryCache cache, IConfiguration config)
         {
             _context = context;
             _cache = cache; // Bağımlılık enjekte edildi
             _config = config;
-            _protector = provider.CreateProtector("GorevLab.Auth");
         }
 
         // --- KAYIT OL VE GİRİŞ YAP İŞLEMLERİ ---
@@ -199,21 +196,9 @@ namespace GorevTakipSistemi.Controllers
         [HttpGet]
         public IActionResult Login() 
         { 
-            if (Request.Cookies.TryGetValue("GorevLabRememberToken", out string token))
+            if (Request.Cookies.TryGetValue("HatirlananKullanici", out string hatirlananKullanici))
             {
-                try
-                {
-                    string decryptedId = _protector.Unprotect(token);
-                    if (int.TryParse(decryptedId, out int id))
-                    {
-                        var user = _context.Kullanicilar.Find(id);
-                        if (user != null && !user.IsBanned)
-                        {
-                            ViewBag.HizliGirisUser = user;
-                        }
-                    }
-                }
-                catch { } // Token geçersizse hatayı yut
+                ViewBag.HatirlananKullanici = hatirlananKullanici;
             }
             return View(); 
         }
@@ -274,57 +259,21 @@ namespace GorevTakipSistemi.Controllers
 
             if (BeniHatirla)
             {
-                var cookieOptions = new CookieOptions { Expires = DateTime.Now.AddDays(10), HttpOnly = true, Secure = true };
-                string token = _protector.Protect(kullanici.Id.ToString());
-                Response.Cookies.Append("GorevLabRememberToken", token, cookieOptions);
+                var cookieOptions = new CookieOptions { Expires = DateTime.Now.AddDays(30), HttpOnly = true, Secure = true };
+                Response.Cookies.Append("HatirlananKullanici", kullanici.KullaniciAdi, cookieOptions);
             }
             else
             {
-                Response.Cookies.Delete("GorevLabRememberToken");
+                Response.Cookies.Delete("HatirlananKullanici");
             }
 
             return RedirectToAction("Index", "Home"); 
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult LoginHizli()
-        {
-            if (Request.Cookies.TryGetValue("GorevLabRememberToken", out string token))
-            {
-                try
-                {
-                    string decryptedId = _protector.Unprotect(token);
-                    if (int.TryParse(decryptedId, out int id))
-                    {
-                        var kullanici = _context.Kullanicilar.Find(id);
-                        if (kullanici != null && !kullanici.IsBanned)
-                        {
-                            HttpContext.Session.SetInt32("KullaniciId", kullanici.Id);
-                            HttpContext.Session.SetString("KullaniciAdSoyad", $"{kullanici.Ad} {kullanici.Soyad}");
-                            HttpContext.Session.SetInt32("KullaniciRol", (int)kullanici.Rol);
-                            
-                            _context.SistemLoglari.Add(new SistemLog {
-                                KullaniciAdi = $"{kullanici.Ad} {kullanici.Soyad}",
-                                YapilanIslem = "Sisteme hızlı (token ile) giriş yapıldı",
-                                IpAdresi = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmeyen IP",
-                                IslemTarihi = DateTime.Now
-                            });
-                            _context.SaveChanges();
-                            return RedirectToAction("Index", "Home"); 
-                        }
-                    }
-                }
-                catch { }
-            }
-            TempData["Error"] = "Hızlı giriş süresi dolmuş veya geçersiz. Lütfen normal giriş yapın.";
-            return RedirectToAction("Login");
-        }
-
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
-            Response.Cookies.Delete("GorevLabRememberToken");
+            Response.Cookies.Delete("HatirlananKullanici");
             return RedirectToAction("Login");
         }
 
