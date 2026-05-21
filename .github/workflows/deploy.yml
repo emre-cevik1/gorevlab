@@ -1,4 +1,4 @@
-name: Deploy to Turkticaret.net (Plesk)
+name: proje github entegrasyonu
 
 on:
   push:
