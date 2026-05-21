@@ -304,16 +304,15 @@
                 showCancelButton: true,
                 buttonsStyling: false,
                 customClass: {
-                    popup: 'border border-white/50 shadow-2xl rounded-[2rem] backdrop-blur-xl bg-white/95',
-                    title: 'text-slate-800 font-bold text-xl',
-                    htmlContainer: 'text-slate-500',
-                    actions: 'gap-4 mt-6',
+                    popup: 'rounded-2xl shadow-xl',
+                    title: 'text-slate-800 font-bold',
+                    htmlContainer: 'text-slate-600 font-medium',
+                    actions: 'gap-3 mt-4',
                     confirmButton: butonClass,
-                    cancelButton: 'bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full px-6 py-3 transition-all'
+                    cancelButton: 'bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-full px-6 py-3 transition-colors'
                 },
                 cancelButtonText: 'İptal',
-                confirmButtonText: onayMetni,
-                background: 'transparent'
+                confirmButtonText: onayMetni
             }).then((result) => {
                 if (result.isConfirmed) {
                     window.location.href = url;
