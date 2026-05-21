@@ -193,11 +193,19 @@ namespace GorevTakipSistemi.Controllers
             return RedirectToAction("Login");
         }
 
-        public IActionResult Login() { return View(); }
+        [HttpGet]
+        public IActionResult Login() 
+        { 
+            if (Request.Cookies.TryGetValue("HatirlananKullanici", out string hatirlananKullanici))
+            {
+                ViewBag.HatirlananKullanici = hatirlananKullanici;
+            }
+            return View(); 
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Login(string KullaniciAdi, string Sifre)
+        public IActionResult Login(string KullaniciAdi, string Sifre, bool BeniHatirla = false)
         {
             if (string.IsNullOrWhiteSpace(KullaniciAdi) || string.IsNullOrWhiteSpace(Sifre))
             {
@@ -248,6 +256,16 @@ namespace GorevTakipSistemi.Controllers
             });
             
             _context.SaveChanges();
+
+            if (BeniHatirla)
+            {
+                var cookieOptions = new CookieOptions { Expires = DateTime.Now.AddDays(30), HttpOnly = true, Secure = true };
+                Response.Cookies.Append("HatirlananKullanici", kullanici.KullaniciAdi, cookieOptions);
+            }
+            else
+            {
+                Response.Cookies.Delete("HatirlananKullanici");
+            }
 
             return RedirectToAction("Index", "Home"); 
         }
