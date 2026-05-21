@@ -97,7 +97,7 @@ namespace GorevTakipSistemi.Controllers
 
             var ekip = _context.Ekipler
                 .Include(e => e.Uyeler).ThenInclude(u => u.Kullanici)
-                .Include(e => e.Gorevler).ThenInclude(g => g.TamamlayanKullanici)
+                .Include(e => e.Gorevler).ThenInclude(g => g.Tamamlamalar).ThenInclude(t => t.Kullanici)
                 .Include(e => e.Davetler).ThenInclude(d => d.Alici)
                 .FirstOrDefault(e => e.Id == id);
 
@@ -249,9 +249,12 @@ namespace GorevTakipSistemi.Controllers
             var gorev = await _context.Gorevler.FindAsync(gorevId);
             if (gorev == null) return Json(new { success = false, message = "Görev bulunamadı!" });
 
-            gorev.DurumAktifMi = false; // Görevi "Bitti" yapıyoruz
-            gorev.TamamlayanKullaniciId = userId; // Görevi kimin bitirdiğini kaydediyoruz
-            await _context.SaveChangesAsync();
+            var tamamlama = await _context.GorevTamamlamalari.FirstOrDefaultAsync(t => t.GorevId == gorevId && t.KullaniciId == userId.Value);
+            if (tamamlama == null)
+            {
+                _context.GorevTamamlamalari.Add(new GorevTamamlama { GorevId = gorevId, KullaniciId = userId.Value });
+                await _context.SaveChangesAsync();
+            }
 
             return Json(new { success = true, message = "Görev başarıyla tamamlandı! ✅" });
         }

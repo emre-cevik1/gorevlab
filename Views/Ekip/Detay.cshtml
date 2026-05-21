@@ -75,24 +75,54 @@
                     {
                         foreach (var g in Model.Gorevler.OrderByDescending(x => x.DurumAktifMi).ThenByDescending(x => x.Tarih))
                         {
-                            <div onclick="gorevDetayGetir(@g.Id)" class="cursor-pointer flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200 group hover:border-indigo-300 transition-all hover:-translate-y-1 @(g.DurumAktifMi ? "" : "opacity-60")">
-                                <div>
-                                    <h5 class="m-0 text-sm font-bold text-slate-800 @(g.DurumAktifMi ? "" : "line-through text-slate-400")">@g.GorevAdi</h5>
-                                    <p class="text-[11px] text-slate-600 m-0"><i class="bi bi-calendar-event"></i> @g.Tarih.ToString("dd.MM.yyyy")</p>
+                            var currentUserId = Context.Session.GetInt32("KullaniciId");
+                            bool benTamamladimMi = g.Tamamlamalar != null && g.Tamamlamalar.Any(t => t.KullaniciId == currentUserId);
+                            
+                            var tamamlayanlar = g.Tamamlamalar?.Select(t => t.Kullanici).ToList() ?? new List<GorevTakipSistemi.Models.Kullanici>();
+                            var bekleyenUyeler = Model.Uyeler.Select(u => u.Kullanici).Where(k => !tamamlayanlar.Any(t => t.Id == k.Id)).ToList();
+                            
+                            bool tumuBittiMi = !bekleyenUyeler.Any();
+
+                            <div onclick="gorevDetayGetir(@g.Id)" class="cursor-pointer flex flex-col p-4 bg-slate-50 rounded-xl border border-slate-200 group hover:border-indigo-300 transition-all hover:-translate-y-1 @(tumuBittiMi ? "opacity-60" : "")">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h5 class="m-0 text-sm font-bold text-slate-800 @(tumuBittiMi ? "line-through text-slate-400" : "")">@g.GorevAdi</h5>
+                                        <p class="text-[11px] text-slate-600 m-0"><i class="bi bi-calendar-event"></i> @g.Tarih.ToString("dd.MM.yyyy")</p>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        @if (benTamamladimMi) {
+                                            <span class="text-[10px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md uppercase border border-emerald-200"><i class="bi bi-check-all"></i> Tamamladın</span>
+                                        } else {
+                                            <button onclick="event.stopPropagation(); gorevBitir(@g.Id)" class="text-[10px] font-black bg-indigo-600 text-white px-3 py-1 rounded-md hover:bg-indigo-700 shadow-sm transition-all"><i class="bi bi-check-lg"></i> Bitir</button>
+                                        }
+                                    </div>
                                 </div>
-                                <div class="flex gap-2">
-                                    @if (g.DurumAktifMi) {
-                                        <span class="text-[10px] font-black bg-indigo-50 text-indigo-600 px-2 py-1 rounded-md uppercase border border-indigo-200">Aktif</span>
-                                        <button onclick="event.stopPropagation(); gorevBitir(@g.Id)" class="text-[10px] font-black bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md hover:bg-emerald-200 shadow-sm transition-all">Bitir</button>
-                                    } else {
-                                        <div class="flex flex-col items-end gap-1">
-                                            <span class="text-[10px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md uppercase border border-emerald-200">Tamamlandı</span>
-                                            @if (g.TamamlayanKullanici != null)
-                                            {
-                                                <span class="text-[10px] text-slate-500 font-medium">✅ @g.TamamlayanKullanici.Ad tamamladı</span>
+                                
+                                <div class="mt-3 pt-3 border-t border-slate-200/60 grid grid-cols-2 gap-2">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">✅ Bitirenler (@tamamlayanlar.Count)</p>
+                                        <div class="flex flex-wrap gap-1">
+                                            @if(tamamlayanlar.Any()) {
+                                                @foreach(var t in tamamlayanlar) {
+                                                    <span class="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded" title="@t.Ad @t.Soyad">@t.Ad</span>
+                                                }
+                                            } else {
+                                                <span class="text-[10px] text-slate-400 italic">Henüz yok</span>
                                             }
                                         </div>
-                                    }
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-1">⏳ Beklenenler (@bekleyenUyeler.Count)</p>
+                                        <div class="flex flex-wrap gap-1">
+                                            @if(bekleyenUyeler.Any()) {
+                                                @foreach(var b in bekleyenUyeler) {
+                                                    <span class="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded" title="@b.Ad @b.Soyad">@b.Ad</span>
+                                                }
+                                            } else {
+                                                <span class="text-[10px] text-slate-400 italic">Herkes bitirdi!</span>
+                                            }
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         }

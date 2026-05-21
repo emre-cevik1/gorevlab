@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace GorevTakipSistemi.Models
 {
@@ -30,8 +31,7 @@ namespace GorevTakipSistemi.Models
         public int? EkipId { get; set; }
         public virtual Ekip Ekip { get; set; }
 
-        // Bu görevi kim tamamladı?
-        public int? TamamlayanKullaniciId { get; set; }
-        public virtual Kullanici? TamamlayanKullanici { get; set; }
+        // Bu görevi kim tamamladı? (Çoklu tamamlama sistemi için)
+        public virtual ICollection<GorevTamamlama> Tamamlamalar { get; set; } = new List<GorevTamamlama>();
     }
 }

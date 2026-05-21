@@ -17,6 +17,7 @@ namespace GorevTakipSistemi.Data
         public DbSet<Ekip> Ekipler { get; set; }
         public DbSet<EkipUyesi> EkipUyeleri { get; set; }
         public DbSet<EkipDavet> EkipDavetleri { get; set; }
+        public DbSet<GorevTamamlama> GorevTamamlamalari { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -31,10 +32,11 @@ namespace GorevTakipSistemi.Data
                 .HasForeignKey(g => g.AtayanKullaniciId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Gorev>()
-                .HasOne(g => g.TamamlayanKullanici)
+            // GorevTamamlama -> Kullanici ilişkisi (Cascade çakışmasını önlemek için Restrict yapıyoruz)
+            modelBuilder.Entity<GorevTamamlama>()
+                .HasOne(gt => gt.Kullanici)
                 .WithMany()
-                .HasForeignKey(g => g.TamamlayanKullaniciId)
+                .HasForeignKey(gt => gt.KullaniciId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // EkipDavet -> Gonderen ilişkisi
