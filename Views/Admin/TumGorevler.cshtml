@@ -76,6 +76,12 @@
                                 </td>
                                 <td class="p-4">
                                     <span class="font-semibold text-slate-800 aranacak-gorev">@g.GorevAdi</span>
+                                    @if(g.EkipId != null)
+                                    {
+                                        <div class="mt-1 text-[10px] font-bold text-purple-600 bg-purple-50 inline-block px-2 py-0.5 rounded-md border border-purple-200">
+                                            <i class="bi bi-people-fill"></i> Ekip Görevi (@(g.Ekip?.Ad))
+                                        </div>
+                                    }
                                 </td>
                                 <td class="p-4">
                                     @if (g.DurumAktifMi)

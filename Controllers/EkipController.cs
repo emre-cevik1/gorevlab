@@ -161,6 +161,15 @@ namespace GorevTakipSistemi.Controllers
                 await _context.SaveChangesAsync();
             }
 
+            // LOG SİSTEMİ
+            _context.SistemLoglari.Add(new SistemLog {
+                KullaniciAdi = adSoyad,
+                YapilanIslem = $"Yeni ekip görevi oluşturuldu ({ekip?.Ad}): {gorevAdi}",
+                IpAdresi = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmeyen IP",
+                IslemTarihi = DateTime.Now
+            });
+            await _context.SaveChangesAsync();
+
             return Json(new { success = true, message = "Ekip görevi başarıyla oluşturuldu! 🎯" });
         }
 
@@ -286,6 +295,15 @@ namespace GorevTakipSistemi.Controllers
                         Mesaj = $"{adSoyad}, '{gorev.GorevAdi}' adlı ekip görevini tamamladı! ✅",
                         Url = $"/Ekip/Detay/{gorev.EkipId}"
                     });
+                    
+                    // LOG SİSTEMİ
+                    _context.SistemLoglari.Add(new SistemLog {
+                        KullaniciAdi = adSoyad,
+                        YapilanIslem = $"Ekip görevini tamamladı: {gorev.GorevAdi}",
+                        IpAdresi = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmeyen IP",
+                        IslemTarihi = DateTime.Now
+                    });
+
                     await _context.SaveChangesAsync();
                 }
             }
@@ -373,6 +391,15 @@ public async Task<IActionResult> EkipGorevGuncelle(int id, string gorevAdi, stri
     gorev.Aciklama = aciklama ?? "";
     gorev.Tarih = tarih;
 
+    // LOG SİSTEMİ
+    string adSoyad = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Bilinmeyen Kullanıcı";
+    _context.SistemLoglari.Add(new SistemLog {
+        KullaniciAdi = adSoyad,
+        YapilanIslem = $"Ekip görevini güncelledi ({gorev.Ekip?.Ad}): {gorevAdi}",
+        IpAdresi = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmeyen IP",
+        IslemTarihi = DateTime.Now
+    });
+
     await _context.SaveChangesAsync();
     return Json(new { success = true, message = "Görev güncellendi! 📝" });
 }
@@ -382,11 +409,20 @@ public async Task<IActionResult> EkipGorevGuncelle(int id, string gorevAdi, stri
 public async Task<IActionResult> EkipGorevSil(int id)
 {
     var userId = HttpContext.Session.GetInt32("KullaniciId");
-    var gorev = await _context.Gorevler.FirstOrDefaultAsync(x => x.Id == id);
+    var gorev = await _context.Gorevler.Include(g => g.Ekip).FirstOrDefaultAsync(x => x.Id == id);
     if (gorev == null) return Json(new { success = false });
 
     var liderMi = await _context.EkipUyeleri.AnyAsync(u => u.EkipId == gorev.EkipId && u.KullaniciId == userId && u.Rol == "Lider");
     if (!liderMi) return Json(new { success = false, message = "Silme yetkiniz yok!" });
+
+    // LOG SİSTEMİ
+    string adSoyad = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Bilinmeyen Kullanıcı";
+    _context.SistemLoglari.Add(new SistemLog {
+        KullaniciAdi = adSoyad,
+        YapilanIslem = $"Ekip görevini sildi ({gorev.Ekip?.Ad}): {gorev.GorevAdi}",
+        IpAdresi = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmeyen IP",
+        IslemTarihi = DateTime.Now
+    });
 
     _context.Gorevler.Remove(gorev);
     await _context.SaveChangesAsync();

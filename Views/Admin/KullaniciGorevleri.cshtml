@@ -62,7 +62,15 @@
                                             <span class="bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-md text-xs font-bold border border-emerald-200"><i class="bi bi-check2-all"></i> Tamamlandı</span>
                                         }
                                     </td>
-                                    <td class="p-4 font-bold text-slate-800 aranacak-gorev text-[15px]">@item.GorevAdi</td>
+                                    <td class="p-4 font-bold text-slate-800 aranacak-gorev text-[15px]">
+                                        @item.GorevAdi
+                                        @if(item.EkipId != null)
+                                        {
+                                            <div class="mt-1 text-[10px] font-bold text-purple-600 bg-purple-50 inline-block px-2 py-0.5 rounded-md border border-purple-200">
+                                                <i class="bi bi-people-fill"></i> Ekip Görevi (@(item.Ekip?.Ad))
+                                            </div>
+                                        }
+                                    </td>
                                     <td class="p-4 text-slate-500 font-medium">@item.Tarih.ToString("dd MMM yyyy")</td>
                                     <td class="p-4">
                                         <span class="font-bold bg-slate-100 px-2 py-1 rounded border border-slate-200 text-xs @(item.Oncelik == "Yüksek" ? "text-red-600" : item.Oncelik == "Orta" ? "text-amber-600" : "text-emerald-600")">

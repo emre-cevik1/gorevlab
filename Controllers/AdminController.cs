@@ -290,7 +290,7 @@ namespace GorevTakipSistemi.Controllers
             if (sessionRol != (int)KullaniciRol.Admin && sessionRol != (int)KullaniciRol.Owner) 
                 return RedirectToAction("Index", "Home");
 
-            var sorgu = _context.Gorevler.Include(g => g.Kullanici).AsQueryable();
+            var sorgu = _context.Gorevler.Include(g => g.Kullanici).Include(g => g.Ekip).AsQueryable();
 
             // 🛡️ GÖREV KORUMASI: Kurucunun görevleri listeden gizlenir
             if (sessionRol != (int)KullaniciRol.Owner)
@@ -343,8 +343,12 @@ namespace GorevTakipSistemi.Controllers
             ViewBag.KullaniciAdSoyad = kullanici.Ad + " " + kullanici.Soyad;
             ViewBag.HedefKullaniciId = id;
 
+            // Kullanıcının üye olduğu ekipler
+            var ekipIds = _context.EkipUyeleri.Where(eu => eu.KullaniciId == id).Select(eu => eu.EkipId).ToList();
+
             var gorevler = _context.Gorevler
-                                   .Where(g => g.KullaniciId == id)
+                                   .Include(g => g.Ekip)
+                                   .Where(g => g.KullaniciId == id || (g.EkipId != null && ekipIds.Contains(g.EkipId.Value)))
                                    .OrderByDescending(g => g.Tarih)
                                    .ToList();
 
