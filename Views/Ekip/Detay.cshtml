@@ -85,7 +85,13 @@
                                         <span class="text-[10px] font-black bg-indigo-50 text-indigo-600 px-2 py-1 rounded-md uppercase border border-indigo-200">Aktif</span>
                                         <button onclick="event.stopPropagation(); gorevBitir(@g.Id)" class="text-[10px] font-black bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md hover:bg-emerald-200 shadow-sm transition-all">Bitir</button>
                                     } else {
-                                        <span class="text-[10px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md uppercase border border-emerald-200">Tamamlandı</span>
+                                        <div class="flex flex-col items-end gap-1">
+                                            <span class="text-[10px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md uppercase border border-emerald-200">Tamamlandı</span>
+                                            @if (g.TamamlayanKullanici != null)
+                                            {
+                                                <span class="text-[10px] text-slate-500 font-medium">✅ @g.TamamlayanKullanici.Ad tamamladı</span>
+                                            }
+                                        </div>
                                     }
                                 </div>
                             </div>

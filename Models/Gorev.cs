@@ -29,5 +29,9 @@ namespace GorevTakipSistemi.Models
 
         public int? EkipId { get; set; }
         public virtual Ekip Ekip { get; set; }
+
+        // Bu görevi kim tamamladı?
+        public int? TamamlayanKullaniciId { get; set; }
+        public virtual Kullanici? TamamlayanKullanici { get; set; }
     }
 }
