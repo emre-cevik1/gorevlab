@@ -33,7 +33,12 @@
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1">Şifre</label>
-                    <input id="sifreInput" name="Sifre" type="password" required class="antigravity-input w-full py-3 text-slate-800 placeholder-slate-400" placeholder="••••••••">
+                    <div class="relative">
+                        <input id="sifreInput" name="Sifre" type="password" required class="antigravity-input w-full py-3 text-slate-800 placeholder-slate-400 pr-12" placeholder="••••••••">
+                        <button type="button" onclick="togglePassword('sifreInput', 'sifreIcon')" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none">
+                            <i id="sifreIcon" class="bi bi-eye-slash-fill text-lg"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -97,6 +102,23 @@
                     window.location.href = `/Auth/KullaniciAdiHatirlat?email=${result.value}`;
                 }
             });
+        }
+
+        function togglePassword(inputId, iconId) {
+            var input = document.getElementById(inputId);
+            var icon = document.getElementById(iconId);
+            
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("bi-eye-slash-fill");
+                icon.classList.add("bi-eye-fill");
+                icon.classList.replace("text-slate-400", "text-indigo-600");
+            } else {
+                input.type = "password";
+                icon.classList.remove("bi-eye-fill");
+                icon.classList.add("bi-eye-slash-fill");
+                icon.classList.replace("text-indigo-600", "text-slate-400");
+            }
         }
     </script>
 
