@@ -66,6 +66,13 @@ namespace GorevTakipSistemi.Controllers
                 return View(model);
             }
 
+            var mevcutEkipSayisi = _context.Ekipler.Count(e => e.KurucuId == userId.Value);
+            if (mevcutEkipSayisi >= 5)
+            {
+                TempData["Error"] = "Maksimum 5 adet ekip oluşturabilirsiniz!";
+                return RedirectToAction("Index");
+            }
+
             ModelState.Clear(); 
 
             model.KurucuId = userId.Value;
@@ -124,6 +131,9 @@ namespace GorevTakipSistemi.Controllers
 
             var uyeMi = _context.EkipUyeleri.Any(u => u.EkipId == ekipId && u.KullaniciId == userId);
             if (!uyeMi) return Json(new { success = false, message = "Bu ekibe görev ekleme yetkiniz yok!" });
+
+            var aktifGorevSayisi = _context.Gorevler.Count(g => g.EkipId == ekipId && g.DurumAktifMi);
+            if (aktifGorevSayisi >= 10) return Json(new { success = false, message = "Bu ekibe en fazla 10 adet aktif görev eklenebilir!" });
 
             var yeniGorev = new Gorev
             {
@@ -220,6 +230,16 @@ namespace GorevTakipSistemi.Controllers
             };
 
             _context.EkipDavetleri.Add(davet);
+
+            var gonderen = await _context.Kullanicilar.FindAsync(gonderenId.Value);
+            var ekip = await _context.Ekipler.FindAsync(ekipId);
+            
+            _context.Bildirimler.Add(new Bildirim {
+                KullaniciId = aliciId,
+                Mesaj = $"{gonderen?.Ad ?? "Biri"} seni '{ekip?.Ad}' ekibine davet etti!",
+                Url = "/Ekip/Index"
+            });
+
             await _context.SaveChangesAsync();
 
             return Json(new { success = true, message = "Davet füzeleri başarıyla ateşlendi! 🚀" });
@@ -306,6 +326,20 @@ namespace GorevTakipSistemi.Controllers
 
                     await _context.SaveChangesAsync();
                 }
+            }
+
+            // Tüm beklenenler tamamladı mı kontrolü
+            var tamamlamalar = await _context.GorevTamamlamalari.Where(t => t.GorevId == gorevId).Select(t => t.KullaniciId).ToListAsync();
+            var ekipUyeleri = await _context.EkipUyeleri.Where(u => u.EkipId == gorev.EkipId).ToListAsync();
+            var uyelerHaricLider = ekipUyeleri.Where(u => u.Rol != "Lider").ToList();
+            var hedefUyeler = uyelerHaricLider.Any() ? uyelerHaricLider : ekipUyeleri.Where(u => u.Rol == "Lider").ToList();
+            
+            var bekleyenKalmadi = !hedefUyeler.Any(u => !tamamlamalar.Contains(u.KullaniciId));
+            
+            if (bekleyenKalmadi && gorev.DurumAktifMi)
+            {
+                gorev.DurumAktifMi = false;
+                await _context.SaveChangesAsync();
             }
 
             return Json(new { success = true, message = "Görev başarıyla tamamlandı! ✅" });

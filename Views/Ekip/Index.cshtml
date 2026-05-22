@@ -30,9 +30,9 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @foreach (var davet in gelenDavetler)
                 {
-                    <div id="davet-row-@davet.Id" class="antigravity-card p-5 flex items-center justify-between hover:-translate-y-1 transition-all">
+                    <div id="davet-row-@davet.Id" class="antigravity-card p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:-translate-y-1 transition-all">
                         <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-slate-50 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 flex items-center justify-center text-indigo-600 hover:-translate-y-1 transition-all">
+                            <div class="w-12 h-12 bg-slate-50 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 flex items-center justify-center text-indigo-600 shrink-0 hover:-translate-y-1 transition-all">
                                 <i class="bi bi-envelope-paper-heart text-2xl"></i>
                             </div>
                             <div>
@@ -40,9 +40,9 @@
                                 <p class="text-xs text-slate-600 m-0">Gönderen: <b class="text-indigo-600">@@@davet.Gonderen.KullaniciAdi</b></p>
                             </div>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="davetIslem(@davet.Id, 'DavetKabul')" class="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-4 py-2 rounded-lg text-xs font-bold transition-colors">Kabul Et</button>
-                            <button onclick="davetIslem(@davet.Id, 'DavetRed')" class="bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 px-4 py-2 rounded-lg text-xs font-bold transition-colors">Reddet</button>
+                        <div class="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                            <button onclick="davetIslem(@davet.Id, 'DavetKabul')" class="flex-1 sm:flex-none bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-4 py-2.5 rounded-lg text-xs font-bold transition-colors">Kabul Et</button>
+                            <button onclick="davetIslem(@davet.Id, 'DavetRed')" class="flex-1 sm:flex-none bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 px-4 py-2.5 rounded-lg text-xs font-bold transition-colors">Reddet</button>
                         </div>
                     </div>
                 }
