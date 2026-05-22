@@ -22,6 +22,10 @@
                 <button onclick="ekibiSil()" class="shrink-0 self-start bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-sm transition-all flex items-center gap-2 shadow-lg border border-red-400/50 hover:-translate-y-1">
                     <i class="bi bi-trash3-fill"></i> Ekibi Dağıt
                 </button>
+            } else {
+                <button onclick="takimdanAyril()" class="shrink-0 self-start bg-slate-800/40 hover:bg-slate-900/60 text-white px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-sm transition-all flex items-center gap-2 shadow-lg border border-white/10 hover:-translate-y-1">
+                    <i class="bi bi-box-arrow-right"></i> Takımdan Ayrıl
+                </button>
             }
         </div>
     </div>
@@ -66,9 +70,11 @@
                     <h3 class="text-lg font-bold text-slate-800 m-0 flex items-center gap-2">
                         <i class="bi bi-list-task text-indigo-500"></i> Ekip Görevleri
                     </h3>
-                    <button onclick="$('#ekipGorevModal').modal('show')" class="antigravity-btn px-4 py-2 flex items-center gap-2 text-xs">
-                        <i class="bi bi-plus-lg"></i> Görev Tanımla
-                    </button>
+                    @if(isLider) {
+                        <button onclick="$('#ekipGorevModal').modal('show')" class="antigravity-btn px-4 py-2 flex items-center gap-2 text-xs">
+                            <i class="bi bi-plus-lg"></i> Görev Tanımla
+                        </button>
+                    }
                 </div>
 
                 <div class="space-y-3">
@@ -256,6 +262,17 @@
     function ekibiSil() {
         Swal.fire({ title: 'EKİBİ DAĞIT?', text: "Her şey silinecek!", icon: 'error', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((result) => {
             if (result.isConfirmed) { $.post('/Ekip/EkipSil', { ekipId: mevcutEkipId }, function(res) { if(res.success) { window.location.href = '/Ekip/Index'; } }); }
+        });
+    }
+
+    function takimdanAyril() {
+        Swal.fire({ title: 'Ayrılmak İstiyor Musunuz?', text: "Takımdan kendi isteğinizle ayrılacaksınız.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Evet, Ayrıl' }).then((result) => {
+            if (result.isConfirmed) { 
+                $.post('/Ekip/TakimdanAyril', { ekipId: mevcutEkipId }, function(res) { 
+                    if(res.success) { window.location.href = '/Ekip/Index'; } 
+                    else { Toast.fire({ icon: 'error', title: res.message }); }
+                }); 
+            }
         });
     }
 

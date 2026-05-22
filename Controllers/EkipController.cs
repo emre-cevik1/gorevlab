@@ -129,8 +129,8 @@ namespace GorevTakipSistemi.Controllers
             var userId = HttpContext.Session.GetInt32("KullaniciId");
             if (userId == null) return Json(new { success = false, message = "Oturum kapalı." });
 
-            var uyeMi = _context.EkipUyeleri.Any(u => u.EkipId == ekipId && u.KullaniciId == userId);
-            if (!uyeMi) return Json(new { success = false, message = "Bu ekibe görev ekleme yetkiniz yok!" });
+            var liderMi = _context.EkipUyeleri.Any(u => u.EkipId == ekipId && u.KullaniciId == userId && u.Rol == "Lider");
+            if (!liderMi) return Json(new { success = false, message = "Sadece ekip lideri görev atayabilir!" });
 
             var aktifGorevSayisi = _context.Gorevler.Count(g => g.EkipId == ekipId && g.DurumAktifMi);
             if (aktifGorevSayisi >= 10) return Json(new { success = false, message = "Bu ekibe en fazla 10 adet aktif görev eklenebilir!" });
@@ -460,7 +460,43 @@ public async Task<IActionResult> EkipGorevSil(int id)
 
     _context.Gorevler.Remove(gorev);
     await _context.SaveChangesAsync();
-    return Json(new { success = true, message = "Görev kalıcı olarak silindi. 🗑️" });
+    return Json(new { success = true, message = "Görev sistemden tamamen silindi! 🗑️" });
+}
+
+// --- ÜYENİN TAKIMDAN KENDİ İSTEĞİYLE AYRILMASI ---
+[HttpPost]
+public async Task<IActionResult> TakimdanAyril(int ekipId)
+{
+    var userId = HttpContext.Session.GetInt32("KullaniciId");
+    if (userId == null) return Json(new { success = false, message = "Oturum kapalı." });
+
+    var uyeKaydi = await _context.EkipUyeleri.FirstOrDefaultAsync(u => u.EkipId == ekipId && u.KullaniciId == userId);
+    if (uyeKaydi == null) return Json(new { success = false, message = "Zaten bu takımda değilsiniz." });
+
+    if (uyeKaydi.Rol == "Lider") 
+    {
+        return Json(new { success = false, message = "Takım liderleri doğrudan ayrılamaz. Önce ekibi dağıtmalı veya liderliği devretmelisiniz." });
+    }
+
+    _context.EkipUyeleri.Remove(uyeKaydi);
+
+    // İsteğe bağlı: Bekleyen görev tamamlamalarını silmek (Eğer kullanıcıya atananlar varsa)
+    // var kullaniciTamamlamalari = _context.GorevTamamlamalari.Where(t => t.KullaniciId == userId && t.Gorev.EkipId == ekipId);
+    // _context.GorevTamamlamalari.RemoveRange(kullaniciTamamlamalari);
+
+    string adSoyad = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Bilinmeyen Kullanıcı";
+    _context.SistemLoglari.Add(new SistemLog {
+        KullaniciAdi = adSoyad,
+        YapilanIslem = $"Takımdan kendi isteğiyle ayrıldı (Ekip ID: {ekipId})",
+        IpAdresi = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmeyen IP",
+        IslemTarihi = DateTime.Now
+    });
+
+    await _context.SaveChangesAsync();
+
+    // Görev durumlarını yeniden değerlendirmek gerekebilir, ancak şimdilik bunu geçiyoruz.
+
+    return Json(new { success = true, message = "Takımdan başarıyla ayrıldınız." });
 }
     }
 }

@@ -80,32 +80,46 @@
 
         function loglariTemizle() {
             Swal.fire({
-                title: 'Logları Temizle',
-                html: '<p class="text-slate-600 mb-4">Sistemdeki tüm log kayıtları kalıcı olarak silinecektir. Onaylıyorsanız aşağıdaki kutuya büyük harflerle <b>ONAY</b> yazın.</p>',
-                input: 'text',
-                inputPlaceholder: 'ONAY',
+                title: 'Doğrulama Kodu Gönderilsin Mi?',
+                text: 'Sistem loglarını silmek için kurucu e-posta adresinize bir doğrulama kodu gönderilecektir.',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Temizle',
+                confirmButtonText: 'Kodu Gönder',
                 cancelButtonText: 'İptal',
-                buttonsStyling: false,
-                customClass: {
-                    popup: 'rounded-2xl shadow-xl',
-                    title: 'text-slate-800 font-bold',
-                    htmlContainer: 'text-sm',
-                    input: 'border border-slate-300 rounded-lg px-4 py-2 text-center text-lg tracking-widest font-bold text-slate-700 uppercase focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none w-full max-w-[200px] mx-auto',
-                    actions: 'gap-3 mt-4',
-                    confirmButton: 'bg-red-500 hover:bg-red-600 text-white font-bold rounded-full px-6 py-3 transition-colors',
-                    cancelButton: 'bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-full px-6 py-3 transition-colors'
-                },
-                preConfirm: (inputValue) => {
-                    if (inputValue !== 'ONAY') {
-                        Swal.showValidationMessage('Geçersiz! Lütfen ONAY yazın.');
-                    }
-                }
+                confirmButtonColor: '#4f46e5'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = '/Admin/LogTemizle';
+                    Swal.fire({ title: 'Gönderiliyor...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+                    
+                    $.post('/Admin/LogTemizleTalep', function(res) {
+                        if(res.success) {
+                            Swal.fire({
+                                title: 'Doğrulama Kodu',
+                                html: '<p class="text-sm text-slate-600 mb-4">E-posta adresinize gönderilen 6 haneli kodu giriniz.</p>',
+                                input: 'text',
+                                inputPlaceholder: '123456',
+                                showCancelButton: true,
+                                confirmButtonText: 'Doğrula ve Sil',
+                                confirmButtonColor: '#ef4444',
+                                preConfirm: (kod) => {
+                                    if (!kod) Swal.showValidationMessage('Lütfen kodu girin!');
+                                    return kod;
+                                }
+                            }).then((kodResult) => {
+                                if (kodResult.isConfirmed) {
+                                    $.post('/Admin/LogTemizle', { kod: kodResult.value }, function(response) {
+                                        if(response.success) {
+                                            Swal.fire('Başarılı', response.message, 'success').then(() => location.reload());
+                                        } else {
+                                            Swal.fire('Hata', response.message, 'error');
+                                        }
+                                    });
+                                }
+                            });
+                        } else {
+                            Swal.fire('Hata', res.message, 'error');
+                        }
+                    });
                 }
             });
         }

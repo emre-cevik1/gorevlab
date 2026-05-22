@@ -9,6 +9,7 @@ using System;
 using System.Threading.Tasks;
 using System.Net.Mail;
 using System.Net;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace GorevTakipSistemi.Controllers
 {
@@ -16,11 +17,13 @@ namespace GorevTakipSistemi.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _config;
+        private readonly Microsoft.Extensions.Caching.Memory.IMemoryCache _cache;
 
-        public AdminController(AppDbContext context, IConfiguration config)
+        public AdminController(AppDbContext context, IConfiguration config, Microsoft.Extensions.Caching.Memory.IMemoryCache cache)
         {
             _context = context;
             _config = config;
+            _cache = cache;
         }
 
         // --- KULLANICI LİSTESİ ---
@@ -481,27 +484,72 @@ namespace GorevTakipSistemi.Controllers
 
             return View(loglar);
         }
-        // --- ADMİN (KURUCU): LOGLARI TEMİZLE ---
-        public IActionResult LogTemizle()
+        // --- ADMİN (KURUCU): LOGLARI TEMİZLEME TALEBİ ---
+        [HttpPost]
+        public IActionResult LogTemizleTalep()
         {
             var sessionRol = HttpContext.Session.GetInt32("KullaniciRol") ?? 0;
-            
-            // Sadece Sistem Kurucusu temizleyebilir
             if (sessionRol != (int)KullaniciRol.Owner) 
+                return Json(new { success = false, message = "Yetkisiz İşlem!" });
+
+            // Rastgele 6 haneli kod üret
+            var random = new Random();
+            string dogrulamaKodu = random.Next(100000, 999999).ToString();
+
+            // Cache'e 5 dakikalığına kaydet
+            _cache.Set("LogTemizleKodu", dogrulamaKodu, TimeSpan.FromMinutes(5));
+
+            // Kurucuya mail gönder (Sistem ayarlarındaki owner maili veya veritabanındaki kurucu)
+            // Varsayılan olarak konfigürasyondan alınıyor:
+            string adminEmail = "info@gorevlab.com.tr"; // veya _config["AdminEmail"] vs.
+            
+            try
             {
-                TempData["Error"] = "Yetkisiz İşlem: Log kayıtlarını sadece sistem kurucusu silebilir!";
-                return RedirectToAction("Index", "Home");
+                System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage();
+                mail.From = new System.Net.Mail.MailAddress("info@gorevlab.com.tr", "GorevLab Sistem");
+                mail.To.Add(adminEmail);
+                mail.Subject = "🚨 Sistem Logları Silme İşlemi Doğrulama Kodu";
+                mail.IsBodyHtml = true;
+                mail.Body = $"<p>Sistem loglarını tamamen silmek için bir talepte bulunuldu.</p><b>Doğrulama Kodunuz: {dogrulamaKodu}</b><p>Bu kodu kimseyle paylaşmayın. Kod 5 dakika geçerlidir.</p>";
+
+                System.Net.Mail.SmtpClient smtp = new System.Net.Mail.SmtpClient("smtp.turkticaret.net", 587);
+                smtp.UseDefaultCredentials = false;
+                smtp.Credentials = new System.Net.NetworkCredential(_config["SmtpSettings:Email"], _config["SmtpSettings:Password"]);
+                smtp.EnableSsl = true;
+                smtp.Send(mail);
             }
+            catch 
+            {
+                return Json(new { success = false, message = "E-Posta gönderilirken bir hata oluştu!" });
+            }
+
+            return Json(new { success = true, message = "Doğrulama kodu kurucu e-posta adresine gönderildi." });
+        }
+
+        // --- ADMİN (KURUCU): LOGLARI TEMİZLE (KOD DOĞRULAMALI) ---
+        [HttpPost]
+        public IActionResult LogTemizle(string kod)
+        {
+            var sessionRol = HttpContext.Session.GetInt32("KullaniciRol") ?? 0;
+            if (sessionRol != (int)KullaniciRol.Owner) 
+                return Json(new { success = false, message = "Yetkisiz İşlem!" });
+
+            if (!_cache.TryGetValue("LogTemizleKodu", out string beklenenKod) || kod != beklenenKod)
+            {
+                return Json(new { success = false, message = "Hatalı veya süresi dolmuş doğrulama kodu!" });
+            }
+
+            // Kod doğruysa temizle ve cache'den sil
+            _cache.Remove("LogTemizleKodu");
 
             var tumLoglar = _context.SistemLoglari.ToList();
             if (tumLoglar.Any())
             {
                 _context.SistemLoglari.RemoveRange(tumLoglar);
                 _context.SaveChanges();
-                TempData["Success"] = "Tüm sistem logları kalıcı olarak başarıyla temizlendi.";
             }
 
-            return RedirectToAction("Loglar");
+            return Json(new { success = true, message = "Tüm sistem logları başarıyla temizlendi." });
         }
 
         // --- ADMİN: DESTEK TALEBİ SİLME ---

@@ -62,22 +62,22 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 px-1">Ad</label>
-                    <input type="text" name="Ad" required class="antigravity-input w-full py-3 text-sm" placeholder="Adınız">
+                    <input type="text" name="Ad" required class="antigravity-input w-full py-3 text-sm" placeholder="Adınız" value="@ViewBag.Ad">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 px-1">Soyad</label>
-                    <input type="text" name="Soyad" required class="antigravity-input w-full py-3 text-sm" placeholder="Soyadınız">
+                    <input type="text" name="Soyad" required class="antigravity-input w-full py-3 text-sm" placeholder="Soyadınız" value="@ViewBag.Soyad">
                 </div>
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 px-1">Kullanıcı Adı</label>
-                <input type="text" name="KullaniciAdi" required pattern="^[a-zA-Z0-9_]{3,20}$" title="Sadece harf, rakam ve alt çizgi." class="antigravity-input w-full py-3 text-indigo-600 font-semibold text-sm" placeholder="kullanici_adi">
+                <input type="text" name="KullaniciAdi" required pattern="^[a-zA-Z0-9_]{3,20}$" title="Sadece harf, rakam ve alt çizgi." class="antigravity-input w-full py-3 text-indigo-600 font-semibold text-sm" placeholder="kullanici_adi" value="@ViewBag.KullaniciAdi">
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 px-1">E-Posta</label>
-                <input type="email" name="Email" required class="antigravity-input w-full py-3 text-sm" placeholder="ornek@mail.com">
+                <input type="email" name="Email" required class="antigravity-input w-full py-3 text-sm" placeholder="ornek@mail.com" value="@ViewBag.Email">
             </div>
 
             <div>

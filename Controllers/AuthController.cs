@@ -35,6 +35,11 @@ namespace GorevTakipSistemi.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(string Ad, string Soyad, string KullaniciAdi, string Email, string Sifre, string KvkkOnay)
         {
+            ViewBag.Ad = Ad;
+            ViewBag.Soyad = Soyad;
+            ViewBag.KullaniciAdi = KullaniciAdi;
+            ViewBag.Email = Email;
+            
             // 🔥 1. IP HIZ SINIRI (RATE LIMITING) VE ANTI-SPAM KALKANI
             string musteriIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmeyen IP";
             string cacheKey = $"Kayit_IP_{musteriIp}";
