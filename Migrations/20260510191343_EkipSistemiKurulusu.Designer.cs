@@ -4,6 +4,7 @@ using GorevTakipSistemi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GorevTakipSistemi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260510191343_EkipSistemiKurulusu")]
+    partial class EkipSistemiKurulusu
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,38 +24,6 @@ namespace GorevTakipSistemi.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("GorevTakipSistemi.Models.Bildirim", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("KullaniciId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Mesaj")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("OkunduMu")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("OlusturmaTarihi")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("KullaniciId");
-
-                    b.ToTable("Bildirimler");
-                });
 
             modelBuilder.Entity("GorevTakipSistemi.Models.DestekMesaji", b =>
                 {
@@ -195,9 +166,6 @@ namespace GorevTakipSistemi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("AtayanKullaniciId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("DurumAktifMi")
                         .HasColumnType("bit");
 
@@ -220,39 +188,11 @@ namespace GorevTakipSistemi.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AtayanKullaniciId");
-
                     b.HasIndex("EkipId");
 
                     b.HasIndex("KullaniciId");
 
                     b.ToTable("Gorevler");
-                });
-
-            modelBuilder.Entity("GorevTakipSistemi.Models.GorevTamamlama", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("GorevId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("KullaniciId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("TamamlamaTarihi")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GorevId");
-
-                    b.HasIndex("KullaniciId");
-
-                    b.ToTable("GorevTamamlamalari");
                 });
 
             modelBuilder.Entity("GorevTakipSistemi.Models.Kullanici", b =>
@@ -343,17 +283,6 @@ namespace GorevTakipSistemi.Migrations
                     b.ToTable("SistemLoglari");
                 });
 
-            modelBuilder.Entity("GorevTakipSistemi.Models.Bildirim", b =>
-                {
-                    b.HasOne("GorevTakipSistemi.Models.Kullanici", "Kullanici")
-                        .WithMany()
-                        .HasForeignKey("KullaniciId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Kullanici");
-                });
-
             modelBuilder.Entity("GorevTakipSistemi.Models.DestekMesaji", b =>
                 {
                     b.HasOne("GorevTakipSistemi.Models.Kullanici", "Kullanici")
@@ -424,11 +353,6 @@ namespace GorevTakipSistemi.Migrations
 
             modelBuilder.Entity("GorevTakipSistemi.Models.Gorev", b =>
                 {
-                    b.HasOne("GorevTakipSistemi.Models.Kullanici", "AtayanKullanici")
-                        .WithMany()
-                        .HasForeignKey("AtayanKullaniciId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("GorevTakipSistemi.Models.Ekip", "Ekip")
                         .WithMany("Gorevler")
                         .HasForeignKey("EkipId");
@@ -439,28 +363,7 @@ namespace GorevTakipSistemi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AtayanKullanici");
-
                     b.Navigation("Ekip");
-
-                    b.Navigation("Kullanici");
-                });
-
-            modelBuilder.Entity("GorevTakipSistemi.Models.GorevTamamlama", b =>
-                {
-                    b.HasOne("GorevTakipSistemi.Models.Gorev", "Gorev")
-                        .WithMany("Tamamlamalar")
-                        .HasForeignKey("GorevId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GorevTakipSistemi.Models.Kullanici", "Kullanici")
-                        .WithMany()
-                        .HasForeignKey("KullaniciId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Gorev");
 
                     b.Navigation("Kullanici");
                 });
@@ -472,11 +375,6 @@ namespace GorevTakipSistemi.Migrations
                     b.Navigation("Gorevler");
 
                     b.Navigation("Uyeler");
-                });
-
-            modelBuilder.Entity("GorevTakipSistemi.Models.Gorev", b =>
-                {
-                    b.Navigation("Tamamlamalar");
                 });
 #pragma warning restore 612, 618
         }

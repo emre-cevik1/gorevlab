@@ -4,6 +4,7 @@ using GorevTakipSistemi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GorevTakipSistemi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260521200327_AddTamamlayanKullanici")]
+    partial class AddTamamlayanKullanici
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -215,6 +218,9 @@ namespace GorevTakipSistemi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("TamamlayanKullaniciId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("Tarih")
                         .HasColumnType("datetime2");
 
@@ -226,33 +232,9 @@ namespace GorevTakipSistemi.Migrations
 
                     b.HasIndex("KullaniciId");
 
+                    b.HasIndex("TamamlayanKullaniciId");
+
                     b.ToTable("Gorevler");
-                });
-
-            modelBuilder.Entity("GorevTakipSistemi.Models.GorevTamamlama", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("GorevId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("KullaniciId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("TamamlamaTarihi")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GorevId");
-
-                    b.HasIndex("KullaniciId");
-
-                    b.ToTable("GorevTamamlamalari");
                 });
 
             modelBuilder.Entity("GorevTakipSistemi.Models.Kullanici", b =>
@@ -439,30 +421,18 @@ namespace GorevTakipSistemi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("GorevTakipSistemi.Models.Kullanici", "TamamlayanKullanici")
+                        .WithMany()
+                        .HasForeignKey("TamamlayanKullaniciId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("AtayanKullanici");
 
                     b.Navigation("Ekip");
 
                     b.Navigation("Kullanici");
-                });
 
-            modelBuilder.Entity("GorevTakipSistemi.Models.GorevTamamlama", b =>
-                {
-                    b.HasOne("GorevTakipSistemi.Models.Gorev", "Gorev")
-                        .WithMany("Tamamlamalar")
-                        .HasForeignKey("GorevId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GorevTakipSistemi.Models.Kullanici", "Kullanici")
-                        .WithMany()
-                        .HasForeignKey("KullaniciId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Gorev");
-
-                    b.Navigation("Kullanici");
+                    b.Navigation("TamamlayanKullanici");
                 });
 
             modelBuilder.Entity("GorevTakipSistemi.Models.Ekip", b =>
@@ -472,11 +442,6 @@ namespace GorevTakipSistemi.Migrations
                     b.Navigation("Gorevler");
 
                     b.Navigation("Uyeler");
-                });
-
-            modelBuilder.Entity("GorevTakipSistemi.Models.Gorev", b =>
-                {
-                    b.Navigation("Tamamlamalar");
                 });
 #pragma warning restore 612, 618
         }
