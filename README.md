@@ -1,7 +1,11 @@
 <div align="center">
   <h1>GorevLab.</h1>
   <p>Modern, Güvenli ve Tam Otomatik Görev Yönetim Sistemi</p>
+  
+  **GitHub Deposu (Kaynak Kodlar):** [https://github.com/emre-cevik1/gorevlab](https://github.com/emre-cevik1/gorevlab)
 </div>
+
+> **Not:** Projede kullanılan tüm API anahtarları, SMTP şifreleri ve güvenlik key'leri (reCAPTCHA vb.) GitHub platformu (Secrets) tarafından şifrelenerek güvenle korunmaktadır.
 
 ---
 
