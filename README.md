@@ -59,5 +59,5 @@ Geliştirici kodu `main` dalına (branch) gönderdiği (push) anda:
 
 ---
 <div align="center">
-  <i>Bu proje <b>Emre Çevik</b> tarafından hayata geçirilmiştir. © 2026 GorevLab.</i>
+  <i>Bu proje <b>Sadık Emre Çevik</b> tarafından hayata geçirilmiştir. © 2026 GorevLab.</i>
 </div>
