@@ -221,83 +221,6 @@ namespace GorevTakipSistemi.Controllers
             return Json(new { success = true });
         }
 
-        // --- 14. KANBAN PANOSU (Tüm aktif görevler / Ekibe göre) ---
-        public IActionResult Kanban(int? ekipId)
-        {
-            int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
-            
-            var query = _context.Gorevler
-                                .Include(g => g.Kullanici)
-                                .Include(g => g.Ekip)
-                                .AsQueryable();
-
-            if (ekipId.HasValue && ekipId.Value > 0)
-            {
-                // Ekibe özel panoyu getir
-                query = query.Where(g => g.EkipId == ekipId.Value);
-            }
-            else
-            {
-                // Sadece kendi görevleri ve dahil olduğu görevleri getir
-                query = query.Where(g => g.KullaniciId == kullaniciId || g.AtayanKullaniciId == kullaniciId);
-            }
-
-            var gorevler = query.OrderByDescending(g => g.Tarih).ToList();
-            
-            if (ekipId.HasValue)
-            {
-                ViewBag.EkipId = ekipId;
-                var ekip = _context.Ekipler.Find(ekipId.Value);
-                if (ekip != null) ViewBag.EkipAdi = ekip.Ad;
-            }
-
-            return View(gorevler);
-        }
-
-        // --- 15. KANBAN DURUM GÜNCELLEME (AJAX POST) ---
-        [HttpPost]
-        public IActionResult KanbanDurumGuncelle(int gorevId, string yeniDurum)
-        {
-            int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
-            var gorev = _context.Gorevler.FirstOrDefault(g => g.Id == gorevId);
-
-            if (gorev == null) return Json(new { success = false, message = "Görev bulunamadı!" });
-
-            // Güvenlik kontrolü (Eğer bireysel görevse başkası çekemez)
-            if (gorev.EkipId == null && gorev.KullaniciId != kullaniciId && gorev.AtayanKullaniciId != kullaniciId)
-            {
-                return Json(new { success = false, message = "Yetkisiz işlem!" });
-            }
-
-            string eskiDurum = gorev.KanbanDurumu;
-            gorev.KanbanDurumu = yeniDurum;
-
-            if (yeniDurum == "Tamamlandi")
-            {
-                gorev.DurumAktifMi = false;
-            }
-            else
-            {
-                gorev.DurumAktifMi = true; // Yapılıyor veya Bekleyene alındıysa tekrar aktifleşir
-            }
-
-            // EKİP AKTİVİTE LOGLAMA
-            if (gorev.EkipId.HasValue && gorev.EkipId.Value > 0 && eskiDurum != yeniDurum)
-            {
-                string aksiyonMetni = "Durum Değiştirdi";
-                if (yeniDurum == "Tamamlandi") aksiyonMetni = "Tamamladı";
-
-                _context.EkipAktiviteleri.Add(new EkipAktivite {
-                    EkipId = gorev.EkipId.Value,
-                    KullaniciId = kullaniciId,
-                    Aksiyon = aksiyonMetni,
-                    Mesaj = $"'{gorev.GorevAdi}' görevini '{yeniDurum}' sütununa taşıdı."
-                });
-            }
-
-            _context.SaveChanges();
-            return Json(new { success = true });
-        }
 
         public IActionResult Details(int id)
         {
@@ -366,7 +289,6 @@ namespace GorevTakipSistemi.Controllers
             if (gorev != null)
             {
                 gorev.DurumAktifMi = false; 
-                gorev.KanbanDurumu = "Tamamlandi"; // Kanban entegrasyonu için
 
                 // EKİP AKTİVİTE LOGLAMA
                 if (gorev.EkipId.HasValue && gorev.EkipId.Value > 0)
