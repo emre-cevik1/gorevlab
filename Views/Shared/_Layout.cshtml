@@ -31,13 +31,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
                         indigo: { 50: '#f0f5fa', 100: '#e1ebf5', 500: '#3B8AC4', 600: '#345DA7' },
                         purple: { 500: '#4BB4DE' },
-                        slate: { 50: '#faf6f3' }
+                        slate: { 50: '#faf6f3', 800: '#1e293b', 900: '#0f172a' }
                     }
                 }
             }
@@ -74,9 +75,26 @@
             opacity: 1;
             pointer-events: auto;
         }
+        /* Dark Mode bg-pattern and glass-nav */
+        .dark .bg-pattern {
+            background-color: #0f172a;
+            background-image: radial-gradient(#1e293b 1px, transparent 1px);
+        }
+        .dark .glass-nav {
+            background: rgba(15, 23, 42, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
     </style>
+    <script>
+        // Sayfa yüklenirken parlama (flash) olmasını engelle
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
 </head>
-<body class="bg-pattern text-slate-800 transition-colors duration-300 min-h-screen">
+<body class="bg-pattern text-slate-800 dark:text-slate-200 transition-colors duration-300 min-h-screen">
     
     <!-- Floating background decorative blobs - Ocean Palette -->
     <div class="fixed top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-[#4BB4DE]/40 rounded-full mix-blend-multiply filter blur-[100px] opacity-80 animate-blob pointer-events-none -z-10"></div>
@@ -141,6 +159,12 @@
                                     <i class="bi bi-ticket-detailed-fill group-hover:rotate-12 transition-transform"></i> Destek
                                 </a>
                             }
+
+                            <!-- Theme Toggle -->
+                            <button id="themeToggleBtn" onclick="toggleTheme()" class="flex items-center justify-center w-10 h-10 text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-full transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1">
+                                <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                                <i class="fa-solid fa-sun hidden dark:block text-lg"></i>
+                            </button>
 
                             <!-- Notifications -->
                             <div class="relative">
@@ -394,6 +418,20 @@
             $.post('/Bildirim/TumunuOkunduIsaretle', function() {
                 bildirimleriGetir();
             });
+        }
+
+        // --- DARK MODE TOGGLE ---
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            
+            // Eğer sayfada chart (grafik) varsa renkleri güncellemesi için event fırlat
+            window.dispatchEvent(new Event('themeChanged'));
         }
     </script>
 

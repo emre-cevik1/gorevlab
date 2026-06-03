@@ -63,6 +63,38 @@ namespace GorevTakipSistemi.Controllers
                                     
             ViewBag.EkipGorevleri = ekipGorevleri;
 
+            // --- GRAFİK VERİLERİ (CHART.JS) ---
+            
+            // 1. Çizgi Grafiği: Son 7 günün / Gelecek 7 günün görev hedefleri
+            var baslangicTarihi = DateTime.Now.Date.AddDays(-3); // Geçmiş 3 gün ve Gelecek 3 gün toplam 7 gün
+            var chartLabels = new List<string>();
+            var chartActiveData = new List<int>();
+            var chartCompletedData = new List<int>();
+
+            for (int i = 0; i < 7; i++)
+            {
+                var gun = baslangicTarihi.AddDays(i);
+                chartLabels.Add(gun.ToString("dd MMM"));
+                chartActiveData.Add(kullanicininGorevleri.Count(g => g.Tarih.Date == gun && g.DurumAktifMi));
+                chartCompletedData.Add(kullanicininGorevleri.Count(g => g.Tarih.Date == gun && !g.DurumAktifMi));
+            }
+
+            ViewBag.ChartLabels = System.Text.Json.JsonSerializer.Serialize(chartLabels);
+            ViewBag.ChartActiveData = System.Text.Json.JsonSerializer.Serialize(chartActiveData);
+            ViewBag.ChartCompletedData = System.Text.Json.JsonSerializer.Serialize(chartCompletedData);
+
+            // 2. Pasta Grafiği: Aktif Görevlerin Öncelik Dağılımı
+            var aktifGorevler = kullanicininGorevleri.Where(g => g.DurumAktifMi).ToList();
+            var pieLabels = new List<string> { "Yüksek", "Orta", "Düşük" };
+            var pieData = new List<int> {
+                aktifGorevler.Count(g => g.Oncelik == "Yüksek"),
+                aktifGorevler.Count(g => g.Oncelik == "Orta"),
+                aktifGorevler.Count(g => g.Oncelik == "Düşük")
+            };
+
+            ViewBag.PieLabels = System.Text.Json.JsonSerializer.Serialize(pieLabels);
+            ViewBag.PieData = System.Text.Json.JsonSerializer.Serialize(pieData);
+
             return View(kullanicininGorevleri);
         }
        
