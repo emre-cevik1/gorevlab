@@ -78,7 +78,7 @@ namespace GorevTakipSistemi.Controllers
 
         // --- SÜRELİ VE NEDENLİ BANLAMA METODU ---
         [HttpPost]
-        public async Task<IActionResult> KullaniciBanla(int id, string neden, int gun)
+        public async Task<IActionResult> KullaniciBanla(int id, string neden, int? gun)
         {
             var sessionRol = HttpContext.Session.GetInt32("KullaniciRol") ?? 0;
             if (sessionRol != (int)KullaniciRol.Admin && sessionRol != (int)KullaniciRol.Owner) return RedirectToAction("Index", "Home");
@@ -109,13 +109,13 @@ namespace GorevTakipSistemi.Controllers
             }
 
             kullanici.BanNedeni = neden;
-            kullanici.BanBitisTarihi = DateTime.Now.AddDays(gun);
+            kullanici.BanBitisTarihi = gun.HasValue && gun.Value > 0 ? DateTime.Now.AddDays(gun.Value) : null;
             kullanici.IsBanned = true; 
 
             string adminIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmeyen IP";
             _context.SistemLoglari.Add(new SistemLog {
                 KullaniciAdi = (HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Admin") + " (Admin)",
-                YapilanIslem = $"Kullanıcı banlandı: {kullanici.KullaniciAdi}",
+                YapilanIslem = $"Kullanıcı banlandı: {kullanici.KullaniciAdi} (Süre: {(gun.HasValue ? gun.Value + " gün" : "Kalıcı")})",
                 IpAdresi = adminIp,
                 IslemTarihi = DateTime.Now
             });
@@ -129,10 +129,14 @@ namespace GorevTakipSistemi.Controllers
                 string gondericiMail = _config["SmtpSettings:Email"]; 
                 string gondericiSifre = _config["SmtpSettings:Password"]; 
 
+                string banSuresiMetin = gun.HasValue && gun.Value > 0 ? $"{gun.Value} Gün" : "Süresiz (Kalıcı)";
+                string banBitisMetin = gun.HasValue && gun.Value > 0 ? kullanici.BanBitisTarihi?.ToString("dd.MM.yyyy HH:mm") : "Belirsiz / Açılmayacak";
+                string aciklamaMetin = gun.HasValue && gun.Value > 0 ? "Bu süre zarfında sisteme giriş yapamayacaksınız. Süre dolduğunda hesabınız otomatik olarak aktif edilecektir." : "Sistem kurallarını ağır şekilde ihlal ettiğiniz için hesabınız kalıcı olarak kapatılmıştır.";
+
                 var mail = new MailMessage();
                 mail.From = new MailAddress(gondericiMail, "GorevLab Yönetimi");
                 mail.To.Add(kullanici.Email ?? "info@gorevlab.com.tr"); 
-                mail.Subject = "Hesabınız Geçici Olarak Askıya Alındı";
+                mail.Subject = gun.HasValue && gun.Value > 0 ? "Hesabınız Geçici Olarak Askıya Alındı" : "Hesabınız Kalıcı Olarak Kapatıldı!";
                 mail.IsBodyHtml = true;
 
                 mail.Body = $@"
@@ -141,10 +145,10 @@ namespace GorevTakipSistemi.Controllers
                         <p>Sayın {kullanici.KullaniciAdi}, GorevLab sistem kurallarını ihlal ettiğiniz tespit edilmiştir.</p>
                         <hr>
                         <p><strong>Uzaklaştırma Nedeni:</strong> {neden}</p>
-                        <p><strong>Uzaklaştırma Süresi:</strong> {gun} Gün</p>
-                        <p><strong>Erişiminizin Açılacağı Tarih:</strong> {kullanici.BanBitisTarihi?.ToString("dd.MM.yyyy HH:mm")}</p>
+                        <p><strong>Uzaklaştırma Süresi:</strong> {banSuresiMetin}</p>
+                        <p><strong>Erişiminizin Açılacağı Tarih:</strong> {banBitisMetin}</p>
                         <hr>
-                        <p style='font-size: 12px; color: #666;'>Bu süre zarfında sisteme giriş yapamayacaksınız. Süre dolduğunda hesabınız otomatik olarak aktif edilecektir.</p>
+                        <p style='font-size: 12px; color: #666;'>{aciklamaMetin}</p>
                     </div>";
 
                 using (var smtp = new SmtpClient("smtp.turkticaret.net", 587))

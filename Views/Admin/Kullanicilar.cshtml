@@ -296,10 +296,19 @@
                 html: `
                     <form id="banForm" action="/Admin/KullaniciBanla" method="post" style="display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 10px;">
                         <input type="hidden" name="id" value="${id}" />
+                        
                         <div style="width: 80%; text-align: left;">
                             <label for="banNedeni" style="font-weight: bold; font-size: 14px; color: #1e293b; margin-left: 5px;">Uzaklaştırma Nedeni:</label>
                             <input type="text" name="neden" id="banNedeni" class="antigravity-input swal2-input" placeholder="Örn: Kural İhlali" style="margin: 5px 0 0 0; width: 100%; max-width: 100%; display: block; box-sizing: border-box;">
                         </div>
+                        
+                        <div style="width: 80%; text-align: left;">
+                            <label style="display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 14px; color: #dc3545; cursor: pointer; margin-left: 5px;">
+                                <input type="checkbox" id="kaliciBanCheck" onchange="document.getElementById('banGun').disabled = this.checked; if(this.checked) document.getElementById('banGun').value = '';"> 
+                                Kalıcı Ban (Süresiz)
+                            </label>
+                        </div>
+
                         <div style="width: 80%; text-align: left;">
                             <label for="banGun" style="font-weight: bold; font-size: 14px; color: #1e293b; margin-left: 5px;">Ban Süresi (Gün):</label>
                             <input type="number" name="gun" id="banGun" min="1" class="antigravity-input swal2-input" placeholder="Kaç gün uzaklaştırılacak?" style="margin: 5px 0 0 0; width: 100%; max-width: 100%; display: block; box-sizing: border-box;">
@@ -317,9 +326,10 @@
                 preConfirm: () => {
                     const neden = Swal.getPopup().querySelector('#banNedeni').value;
                     const gun = Swal.getPopup().querySelector('#banGun').value;
+                    const isKalici = Swal.getPopup().querySelector('#kaliciBanCheck').checked;
                     
-                    if (!neden || !gun) {
-                        Swal.showValidationMessage(`Lütfen neden ve gün giriniz!`);
+                    if (!neden || (!gun && !isKalici)) {
+                        Swal.showValidationMessage(`Lütfen neden ve gün giriniz (Veya kalıcı banı seçiniz)!`);
                         return false;
                     }
                     return true;
