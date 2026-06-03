@@ -22,28 +22,28 @@
     </div>
     
     <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="antigravity-card p-6 text-center hover:-translate-y-2 transition-transform">
-            <div class="w-16 h-16 mx-auto bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-3xl font-bold mb-4">
+        <a asp-controller="Gorev" asp-action="Index" class="antigravity-card p-6 text-center hover:-translate-y-2 transition-transform block no-underline cursor-pointer group">
+            <div class="w-16 h-16 mx-auto bg-indigo-50 group-hover:bg-indigo-600 group-hover:text-white text-indigo-600 rounded-2xl flex items-center justify-center text-3xl font-bold mb-4 transition-colors">
                 <i class="bi bi-list-check"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-800 mb-2">Görev Yönetimi</h3>
+            <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">Görev Yönetimi</h3>
             <p class="text-sm text-slate-500">Tüm görevlerini tek bir yerden yönet, süreci kolayca takip et.</p>
-        </div>
+        </a>
         
-        <div class="antigravity-card p-6 text-center hover:-translate-y-2 transition-transform">
-            <div class="w-16 h-16 mx-auto bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-3xl font-bold mb-4">
+        <a asp-controller="Ekip" asp-action="Index" class="antigravity-card p-6 text-center hover:-translate-y-2 transition-transform block no-underline cursor-pointer group">
+            <div class="w-16 h-16 mx-auto bg-amber-50 group-hover:bg-amber-500 group-hover:text-white text-amber-600 rounded-2xl flex items-center justify-center text-3xl font-bold mb-4 transition-colors">
                 <i class="bi bi-people"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-800 mb-2">Takım Çalışması</h3>
+            <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-amber-600 transition-colors">Takım Çalışması</h3>
             <p class="text-sm text-slate-500">Ekibinle koordineli çalış, anında geri bildirim al.</p>
-        </div>
+        </a>
         
-        <div class="antigravity-card p-6 text-center hover:-translate-y-2 transition-transform">
-            <div class="w-16 h-16 mx-auto bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl font-bold mb-4">
+        <a asp-controller="Home" asp-action="Dashboard" class="antigravity-card p-6 text-center hover:-translate-y-2 transition-transform block no-underline cursor-pointer group">
+            <div class="w-16 h-16 mx-auto bg-emerald-50 group-hover:bg-emerald-500 group-hover:text-white text-emerald-600 rounded-2xl flex items-center justify-center text-3xl font-bold mb-4 transition-colors">
                 <i class="bi bi-graph-up-arrow"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-800 mb-2">Gelişmiş Analizler</h3>
+            <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-emerald-600 transition-colors">Gelişmiş Analizler</h3>
             <p class="text-sm text-slate-500">İlerlemeni görsel analizlerle izle, performansını artır.</p>
-        </div>
+        </a>
     </div>
 </div>
