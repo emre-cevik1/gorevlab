@@ -294,12 +294,15 @@
             Swal.fire({
                 title: 'Kullanıcıyı Uzaklaştır',
                 html: `
-                    <form id="banForm" action="/Admin/KullaniciBanla" method="post">
+                    <form id="banForm" action="/Admin/KullaniciBanla" method="post" style="display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 10px;">
                         <input type="hidden" name="id" value="${id}" />
-                        <input type="text" name="neden" id="banNedeni" class="antigravity-input swal2-input" placeholder="Uzaklaştırma Nedeni (Örn: Kural İhlali)">
-                        <div style="margin-top: 15px; text-align: left; padding: 0 20px;">
-                            <label for="banGun" style="font-weight: bold; font-size: 14px; color: #1e293b;">Ban Süresi (Gün):</label>
-                            <input type="number" name="gun" id="banGun" min="1" class="antigravity-input swal2-input" placeholder="Kaç gün uzaklaştırılacak?" style="margin-top: 5px;">
+                        <div style="width: 80%; text-align: left;">
+                            <label for="banNedeni" style="font-weight: bold; font-size: 14px; color: #1e293b; margin-left: 5px;">Uzaklaştırma Nedeni:</label>
+                            <input type="text" name="neden" id="banNedeni" class="antigravity-input swal2-input" placeholder="Örn: Kural İhlali" style="margin: 5px 0 0 0; width: 100%; max-width: 100%; display: block; box-sizing: border-box;">
+                        </div>
+                        <div style="width: 80%; text-align: left;">
+                            <label for="banGun" style="font-weight: bold; font-size: 14px; color: #1e293b; margin-left: 5px;">Ban Süresi (Gün):</label>
+                            <input type="number" name="gun" id="banGun" min="1" class="antigravity-input swal2-input" placeholder="Kaç gün uzaklaştırılacak?" style="margin: 5px 0 0 0; width: 100%; max-width: 100%; display: block; box-sizing: border-box;">
                         </div>
                     </form>
                 `,
