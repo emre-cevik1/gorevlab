@@ -1,0 +1,44 @@
+@using Microsoft.AspNetCore.Http
+@{
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
+
+<div class="bg-white/80 backdrop-blur-md border border-slate-200 rounded-2xl p-2 mb-8 flex flex-wrap items-center gap-2 shadow-sm">
+    <a asp-controller="Admin" asp-action="Kullanicilar" class="px-4 py-2 rounded-xl text-sm font-bold transition-all no-underline flex items-center gap-2 @(currentAction == "Kullanicilar" ? "bg-indigo-600 text-white shadow-md" : "text-slate-600 hover:bg-slate-100 hover:text-indigo-600")">
+        <i class="bi bi-people-fill"></i> Kullanıcılar
+    </a>
+
+    <a asp-controller="Admin" asp-action="TumGorevler" class="px-4 py-2 rounded-xl text-sm font-bold transition-all no-underline flex items-center gap-2 @(currentAction == "TumGorevler" ? "bg-indigo-600 text-white shadow-md" : "text-slate-600 hover:bg-slate-100 hover:text-indigo-600")">
+        <i class="bi bi-card-checklist"></i> Tüm Görevler
+    </a>
+    
+    <a asp-controller="Admin" asp-action="DestekTalepleri" class="px-4 py-2 rounded-xl text-sm font-bold transition-all no-underline flex items-center gap-2 @(currentAction == "DestekTalepleri" ? "bg-indigo-600 text-white shadow-md" : "text-slate-600 hover:bg-slate-100 hover:text-indigo-600")">
+        <i class="bi bi-ticket-detailed-fill"></i> Destek Talepleri
+    </a>
+
+    @if (Context.Session.GetInt32("KullaniciRol") == (int)GorevTakipSistemi.Models.KullaniciRol.Owner)
+    {
+        <a asp-controller="Admin" asp-action="Loglar" class="px-4 py-2 rounded-xl text-sm font-bold transition-all no-underline flex items-center gap-2 @(currentAction == "Loglar" ? "bg-indigo-600 text-white shadow-md" : "text-slate-600 hover:bg-slate-100 hover:text-indigo-600")">
+            <i class="fa-solid fa-terminal"></i> Sistem Logları
+        </a>
+        
+        <div class="ml-auto pl-4 border-l border-slate-200">
+            @if (GorevTakipSistemi.Models.SiteSettings.BakimModuAktif)
+            {
+                <form asp-controller="Admin" asp-action="BakimModuTetikle" method="post" class="m-0">
+                    <button type="submit" class="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-xs font-bold uppercase rounded-xl hover:bg-red-700 transition-colors border-0 shadow-md">
+                        <i class="fa-solid fa-lock"></i> SİSTEM BAKIMDA
+                    </button>
+                </form>
+            }
+            else
+            {
+                <form asp-controller="Admin" asp-action="BakimModuTetikle" method="post" class="m-0">
+                    <button type="submit" class="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-bold uppercase rounded-xl hover:bg-emerald-100 transition-colors">
+                        <i class="fa-solid fa-lock-open"></i> BAKIMA AL
+                    </button>
+                </form>
+            }
+        </div>
+    }
+</div>
