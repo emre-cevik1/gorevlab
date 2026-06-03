@@ -162,6 +162,19 @@ namespace GorevTakipSistemi.Controllers
                 _context.SaveChanges();
             }
 
+            // EKİP AKTİVİTE LOGLAMA
+            if (gorev.EkipId.HasValue && gorev.EkipId.Value > 0)
+            {
+                string adSoyad = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Biri";
+                _context.EkipAktiviteleri.Add(new EkipAktivite {
+                    EkipId = gorev.EkipId.Value,
+                    KullaniciId = me,
+                    Aksiyon = "Oluşturdu",
+                    Mesaj = $"'{gorev.GorevAdi}' adlı görevi ekibe atadı."
+                });
+                _context.SaveChanges();
+            }
+
             // LOG SİSTEMİ
             _context.SistemLoglari.Add(new SistemLog {
                 KullaniciAdi = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Bilinmeyen Kullanıcı",
@@ -177,6 +190,115 @@ namespace GorevTakipSistemi.Controllers
         }
 
         // --- 7. GÖREV DETAYLARI ---
+        
+        // --- 13. SADECE YETKİLİ (Ekip Sahibi/Yönetici) GÖREV ATAMASI (AJAX) ---
+        [HttpPost]
+        public IActionResult GorevAta(int gorevId, int yeniKullaniciId)
+        {
+            var me = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
+            var gorev = _context.Gorevler.FirstOrDefault(g => g.Id == gorevId && g.EkipId != null);
+            if(gorev == null) return Json(new { success = false, message = "Görev bulunamadı!" });
+
+            // Kullanıcının bu ekibin kurucusu olup olmadığını kontrol et
+            var ekip = _context.Ekipler.FirstOrDefault(e => e.Id == gorev.EkipId);
+            if(ekip == null || ekip.KurucuId != me) {
+                return Json(new { success = false, message = "Sadece ekip kurucusu görev ataması yapabilir!" });
+            }
+
+            gorev.KullaniciId = yeniKullaniciId;
+            gorev.AtayanKullaniciId = me;
+            _context.SaveChanges();
+
+            // Bildirim
+            var adSoyad = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Yönetici";
+            _context.Bildirimler.Add(new Bildirim {
+                KullaniciId = yeniKullaniciId,
+                Mesaj = $"{adSoyad} sana '{gorev.GorevAdi}' görevini atadı.",
+                Url = $"/Ekip/Detay/{gorev.EkipId}"
+            });
+            _context.SaveChanges();
+
+            return Json(new { success = true });
+        }
+
+        // --- 14. KANBAN PANOSU (Tüm aktif görevler / Ekibe göre) ---
+        public IActionResult Kanban(int? ekipId)
+        {
+            int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
+            
+            var query = _context.Gorevler
+                                .Include(g => g.Kullanici)
+                                .Include(g => g.Ekip)
+                                .AsQueryable();
+
+            if (ekipId.HasValue && ekipId.Value > 0)
+            {
+                // Ekibe özel panoyu getir
+                query = query.Where(g => g.EkipId == ekipId.Value);
+            }
+            else
+            {
+                // Sadece kendi görevleri ve dahil olduğu görevleri getir
+                query = query.Where(g => g.KullaniciId == kullaniciId || g.AtayanKullaniciId == kullaniciId);
+            }
+
+            var gorevler = query.OrderByDescending(g => g.Tarih).ToList();
+            
+            if (ekipId.HasValue)
+            {
+                ViewBag.EkipId = ekipId;
+                var ekip = _context.Ekipler.Find(ekipId.Value);
+                if (ekip != null) ViewBag.EkipAdi = ekip.Ad;
+            }
+
+            return View(gorevler);
+        }
+
+        // --- 15. KANBAN DURUM GÜNCELLEME (AJAX POST) ---
+        [HttpPost]
+        public IActionResult KanbanDurumGuncelle(int gorevId, string yeniDurum)
+        {
+            int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
+            var gorev = _context.Gorevler.FirstOrDefault(g => g.Id == gorevId);
+
+            if (gorev == null) return Json(new { success = false, message = "Görev bulunamadı!" });
+
+            // Güvenlik kontrolü (Eğer bireysel görevse başkası çekemez)
+            if (gorev.EkipId == null && gorev.KullaniciId != kullaniciId && gorev.AtayanKullaniciId != kullaniciId)
+            {
+                return Json(new { success = false, message = "Yetkisiz işlem!" });
+            }
+
+            string eskiDurum = gorev.KanbanDurumu;
+            gorev.KanbanDurumu = yeniDurum;
+
+            if (yeniDurum == "Tamamlandi")
+            {
+                gorev.DurumAktifMi = false;
+            }
+            else
+            {
+                gorev.DurumAktifMi = true; // Yapılıyor veya Bekleyene alındıysa tekrar aktifleşir
+            }
+
+            // EKİP AKTİVİTE LOGLAMA
+            if (gorev.EkipId.HasValue && gorev.EkipId.Value > 0 && eskiDurum != yeniDurum)
+            {
+                string aksiyonMetni = "Durum Değiştirdi";
+                if (yeniDurum == "Tamamlandi") aksiyonMetni = "Tamamladı";
+
+                _context.EkipAktiviteleri.Add(new EkipAktivite {
+                    EkipId = gorev.EkipId.Value,
+                    KullaniciId = kullaniciId,
+                    Aksiyon = aksiyonMetni,
+                    Mesaj = $"'{gorev.GorevAdi}' görevini '{yeniDurum}' sütununa taşıdı."
+                });
+            }
+
+            _context.SaveChanges();
+            return Json(new { success = true });
+        }
+
         public IActionResult Details(int id)
         {
             int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
@@ -244,6 +366,18 @@ namespace GorevTakipSistemi.Controllers
             if (gorev != null)
             {
                 gorev.DurumAktifMi = false; 
+                gorev.KanbanDurumu = "Tamamlandi"; // Kanban entegrasyonu için
+
+                // EKİP AKTİVİTE LOGLAMA
+                if (gorev.EkipId.HasValue && gorev.EkipId.Value > 0)
+                {
+                    _context.EkipAktiviteleri.Add(new EkipAktivite {
+                        EkipId = gorev.EkipId.Value,
+                        KullaniciId = kullaniciId,
+                        Aksiyon = "Tamamladı",
+                        Mesaj = $"'{gorev.GorevAdi}' adlı görevi tamamladı."
+                    });
+                }
 
                 // LOG SİSTEMİ
                 _context.SistemLoglari.Add(new SistemLog {

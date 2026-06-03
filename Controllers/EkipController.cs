@@ -119,6 +119,13 @@ namespace GorevTakipSistemi.Controllers
             ViewBag.CurrentUserId = userId;
             ViewBag.IsLider = ekip.Uyeler.Any(u => u.KullaniciId == userId && u.Rol == "Lider");
 
+            ViewBag.Aktiviteler = _context.EkipAktiviteleri
+                                          .Include(a => a.Kullanici)
+                                          .Where(a => a.EkipId == id)
+                                          .OrderByDescending(a => a.Tarih)
+                                          .Take(20)
+                                          .ToList();
+
             return View(ekip);
         }
 
@@ -141,12 +148,22 @@ namespace GorevTakipSistemi.Controllers
                 Aciklama = aciklama ?? "",
                 Tarih = tarih,
                 DurumAktifMi = true,
-                KullaniciId = userId.Value, 
+                KullaniciId = userId.Value,
+                AtayanKullaniciId = userId.Value,
                 EkipId = ekipId, 
-                Oncelik = "Normal" 
+                Oncelik = "Normal"
             };
 
             _context.Gorevler.Add(yeniGorev);
+
+            // AKTİVİTE LOGLAMA
+            _context.EkipAktiviteleri.Add(new EkipAktivite {
+                EkipId = ekipId,
+                KullaniciId = userId.Value,
+                Aksiyon = "Oluşturdu",
+                Mesaj = $"'{gorevAdi}' adlı görevi ekibe tanımladı."
+            });
+
             await _context.SaveChangesAsync();
 
             // Ekipteki diğer üyelere bildirim gönder

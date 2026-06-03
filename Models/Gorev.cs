@@ -20,6 +20,8 @@ namespace GorevTakipSistemi.Models
         
         public bool DurumAktifMi { get; set; } = true; // True: Aktif/Bekleyen, False: Tamamlandı
         
+        public string KanbanDurumu { get; set; } = "Bekleyen"; // "Bekleyen", "Yapiliyor", "Tamamlandi"
+        
         // Bu görev hangi kullanıcıya ait? (Kime atandı?)
         public int KullaniciId { get; set; }
         public virtual Kullanici? Kullanici { get; set; }
