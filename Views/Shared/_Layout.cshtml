@@ -101,6 +101,8 @@
 
                         <!-- Desktop Menu -->
                         <div class="hidden md:flex items-center gap-6 ml-10 mr-auto">
+                            <a asp-controller="Home" asp-action="Index" class="px-2 py-2 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:-translate-y-0.5 transition-all duration-300 no-underline">Ana Sayfa</a>
+                            <a asp-controller="Home" asp-action="Index" class="px-2 py-2 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:-translate-y-0.5 transition-all duration-300 no-underline">Dashboard</a>
                             <a asp-controller="Gorev" asp-action="Index" class="px-2 py-2 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:-translate-y-0.5 transition-all duration-300 no-underline">Tüm Görevler</a>
                             <a asp-controller="Iletisim" asp-action="Index" class="px-2 py-2 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:-translate-y-0.5 transition-all duration-300 no-underline">Bize Ulaşın</a>
                         </div>
@@ -196,8 +198,12 @@
                             </div>
                         </div>
 
+                    <div class="grid grid-cols-1 gap-2 mb-8">
+                        <a asp-controller="Home" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-house-door-fill text-indigo-600 text-xl me-3"></i> Ana Sayfa</a>
+                        <a asp-controller="Home" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-speedometer2 text-indigo-600 text-xl me-3"></i> Dashboard</a>
                         <a asp-controller="Gorev" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-list-task text-indigo-600 text-xl me-3"></i> Tüm Görevler</a>
-                        <a asp-controller="Iletisim" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-envelope text-indigo-600 text-xl me-3"></i> Bize Ulaşın</a>
+                        <a asp-controller="Iletisim" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-envelope-paper-fill text-indigo-600 text-xl me-3"></i> Bize Ulaşın</a>
+                    </div>
                         
                         <div class="border-t border-slate-200/50 my-4 mx-2"></div>
 
