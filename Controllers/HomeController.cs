@@ -30,8 +30,20 @@ namespace GorevTakipSistemi.Controllers
             _env = env;
         }
 
-        // --- 1. ANA SAYFA (DASHBOARD) ---
+        // --- 1. ANA SAYFA ---
         public IActionResult Index()
+        {
+            var kullaniciId = HttpContext.Session.GetInt32("KullaniciId");
+            if (kullaniciId == null) return RedirectToAction("Login", "Auth");
+            
+            // Eğer giriş yapmışsa direkt Dashboard'a yönlendirebiliriz, 
+            // ya da kullanıcıya özel çok basit bir özet sunabiliriz.
+            // Kullanıcı ayrı bir sayfa istediği için şimdilik basit bir karşılama sayfası yapalım.
+            return View();
+        }
+
+        // --- 1.1 DASHBOARD (GELİŞMİŞ İSTATİSTİKLER) ---
+        public IActionResult Dashboard()
         {
             var kullaniciId = HttpContext.Session.GetInt32("KullaniciId");
             if (kullaniciId == null) return RedirectToAction("Login", "Auth");
