@@ -2,17 +2,17 @@
     ViewData["Title"] = "Görev Takvimi";
 }
 
-<div class="max-w-7xl mx-auto mt-6 px-4 mb-12">
-    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+<div class="max-w-7xl mx-auto mt-4 sm:mt-6 px-4 mb-12">
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 sm:mb-6 gap-4">
         <div>
-            <h2 class="text-3xl font-black text-slate-800 flex items-center gap-3">
+            <h2 class="text-2xl sm:text-3xl font-black text-slate-800 flex items-center gap-3">
                 <i class="bi bi-calendar-event text-indigo-600"></i> Görev Takvimi
             </h2>
-            <p class="text-slate-500 font-medium mt-1">
+            <p class="text-sm sm:text-base text-slate-500 font-medium mt-1">
                 Tüm görevlerinizi takvim üzerinden inceleyebilir ve sürükle-bırak ile tarihlerini güncelleyebilirsiniz.
             </p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
             <span class="flex items-center gap-1.5 text-xs font-bold text-slate-500 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
                 <span class="w-3 h-3 rounded-full bg-[#10b981]"></span> Tamamlanmış
             </span>
@@ -26,8 +26,8 @@
     </div>
 
     <!-- antigravity-card hover animasyonu sürükle-bırak pozisyonunu bozduğu için düz tailwind class'ları kullanıyoruz -->
-    <div class="p-6 bg-white/70 backdrop-blur-xl rounded-3xl shadow-sm border border-slate-200">
-        <div id='calendar' class="min-h-[600px]"></div>
+    <div class="p-3 sm:p-6 bg-white/70 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+        <div id='calendar' class="min-h-[500px] sm:min-h-[600px] overflow-x-auto"></div>
     </div>
 </div>
 
@@ -60,14 +60,17 @@
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
             
+            // Ekran boyutuna göre toolbar ayarlaması
+            var isMobile = window.innerWidth < 768;
+            
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 locale: 'tr',
                 themeSystem: 'standard',
                 headerToolbar: {
-                    left: 'prev,next today',
+                    left: isMobile ? 'prev,next' : 'prev,next today',
                     center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                    right: isMobile ? 'dayGridMonth,timeGridDay' : 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
                 buttonText: {
                     today: 'Bugün',
@@ -81,6 +84,7 @@
                 editable: true,       // Sürükle-bırak izni
                 droppable: true,
                 eventDurationEditable: false, // Şimdilik sadece tarih değiştirsin, süre uzatmasın
+                height: isMobile ? 'auto' : 600,
                 
                 // Görev sürüklenip bırakıldığında tetiklenir
                 eventDrop: function(info) {
@@ -123,12 +127,24 @@
     <style>
         /* FullCalendar Tailwind/Custom UI Uyarlamaları */
         .fc .fc-toolbar-title { font-weight: 900; color: #1e293b; font-size: 1.5rem; }
-        .fc .fc-button-primary { background-color: #4f46e5; border-color: #4f46e5; font-weight: bold; border-radius: 0.5rem; text-transform: capitalize; }
+        .fc .fc-button-primary { background-color: #4f46e5; border-color: #4f46e5; font-weight: bold; border-radius: 0.5rem; text-transform: capitalize; padding: 0.4rem 0.8rem; }
         .fc .fc-button-primary:hover { background-color: #4338ca; border-color: #4338ca; }
         .fc .fc-button-primary:disabled { background-color: #818cf8; border-color: #818cf8; }
         .fc-theme-standard td, .fc-theme-standard th { border-color: #e2e8f0; }
         .fc .fc-daygrid-day.fc-day-today { background-color: #f8fafc; }
-        .fc .fc-event { cursor: pointer; border-radius: 4px; padding: 2px 4px; border: none; box-shadow: 0 1px 2px rgba(0,0,0,0.1); transition: transform 0.2s; font-weight: 600; font-size: 0.75rem; }
+        .fc .fc-event { cursor: pointer; border-radius: 4px; padding: 2px 4px; border: none; box-shadow: 0 1px 2px rgba(0,0,0,0.1); transition: transform 0.2s; font-weight: 600; font-size: 0.75rem; overflow: hidden; }
         .fc .fc-event:hover { transform: translateY(-1px) scale(1.02); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        /* Mobile Specific Overrides */
+        @@media (max-width: 768px) {
+            .fc .fc-toolbar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .fc .fc-toolbar-title { font-size: 1.25rem; }
+            .fc .fc-button-primary { padding: 0.3rem 0.6rem; font-size: 0.8rem; }
+            .fc-col-header-cell-cushion { font-size: 0.8rem; padding: 4px !important; }
+            .fc-daygrid-day-number { font-size: 0.85rem; padding: 2px !important; }
+        }
     </style>
 }
