@@ -28,6 +28,9 @@
                 <i class="bi bi-search absolute left-3.5 top-3.5 text-slate-400"></i>
             </div>
             <div class="flex w-full sm:w-auto gap-3">
+                <button onclick="bildirimModalAc(null, 'Tüm Kullanıcılar')" class="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-indigo-700 transition-all">
+                    <i class="bi bi-send-fill"></i> Genel Duyuru
+                </button>
                 <div class="flex-1 antigravity-card px-6 py-3 text-center">
                     <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Toplam Kullanıcı</p>
                     <p class="text-2xl font-black text-[#345DA7]">@Model.Count</p>
@@ -119,6 +122,10 @@
                                 <i class="bi bi-slash-circle"></i>
                             </button>
                         }
+
+                        <button onclick="bildirimModalAc('@user.Id', '@user.AdSoyad')" class="w-10 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all text-sm border-0" title="Bildirim Gönder">
+                            <i class="bi bi-bell-fill"></i>
+                        </button>
 
                         <a asp-action="RolDegistir" asp-route-id="@user.Id" class="w-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all text-sm no-underline" title="Rolü Değiştir">
                             <i class="bi bi-arrow-left-right"></i>
@@ -213,9 +220,13 @@
                             <td class="px-8 py-5 text-end border-0">
                                 <div class="flex justify-end items-center gap-2">
                                     
-                                    <a asp-controller="Admin" asp-action="KullaniciGorevleri" asp-route-id="@user.Id" class="w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm no-underline" title="Görevleri Görüntüle">
+                                    <a asp-controller="Admin" asp-action="KullaniciGorevleri" asp-route-id="@user.Id" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-800 hover:text-white transition-all shadow-sm no-underline" title="Görevleri Görüntüle">
                                         <i class="bi bi-card-checklist text-lg"></i>
                                     </a>
+
+                                    <button onclick="bildirimModalAc('@user.Id', '@user.AdSoyad')" class="w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm border-0" title="Bildirim Gönder">
+                                        <i class="bi bi-bell-fill"></i>
+                                    </button>
 
                                     @if (user.Rol != GorevTakipSistemi.Models.KullaniciRol.Owner)
                                     {
@@ -251,6 +262,45 @@
                     }
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Bildirim Gönder Modal -->
+<div class="modal fade" id="bildirimModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-2xl shadow-2xl bg-white overflow-hidden">
+            <div class="modal-header bg-gradient-to-r from-purple-500 to-indigo-600 border-0 p-5">
+                <h5 class="modal-title text-white font-black flex items-center gap-2 text-lg">
+                    <i class="bi bi-send-fill text-xl"></i> 
+                    Bildirim Gönder
+                </h5>
+                <button type="button" class="btn-close btn-close-white opacity-100" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-6">
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Alıcı</label>
+                    <div class="w-full bg-slate-50 text-slate-700 font-bold px-4 py-3 rounded-xl border border-slate-200" id="bildirimAliciAdi">Tüm Kullanıcılar</div>
+                </div>
+                
+                <input type="hidden" id="bildirimAliciId" value="" />
+                
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Başlık</label>
+                    <input type="text" id="bildirimBaslik" class="antigravity-input w-full" value="Sistem Bildirimi" />
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Mesajınız</label>
+                    <textarea id="bildirimMesaj" class="antigravity-input w-full h-32 resize-none" placeholder="Kullanıcıya gönderilecek mesajı yazın..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-t border-slate-100 p-4 bg-slate-50 flex gap-2">
+                <button type="button" class="antigravity-btn bg-slate-200 text-slate-700 hover:bg-slate-300" data-bs-dismiss="modal">İptal</button>
+                <button type="button" onclick="bildirimGonderSubmit()" class="antigravity-btn bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 px-6">
+                    <i class="bi bi-rocket-takeoff-fill"></i> Fırlat
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -339,6 +389,45 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     document.getElementById('banForm').submit();
+                }
+        }
+
+        // --- BİLDİRİM GÖNDERME İŞLEMLERİ ---
+        function bildirimModalAc(id, adSoyad) {
+            document.getElementById('bildirimAliciId').value = id || '';
+            document.getElementById('bildirimAliciAdi').innerText = adSoyad || 'Tüm Kullanıcılar';
+            document.getElementById('bildirimBaslik').value = 'Sistem Duyurusu';
+            document.getElementById('bildirimMesaj').value = '';
+            
+            var myModal = new bootstrap.Modal(document.getElementById('bildirimModal'));
+            myModal.show();
+        }
+
+        function bildirimGonderSubmit() {
+            var id = document.getElementById('bildirimAliciId').value;
+            var baslik = document.getElementById('bildirimBaslik').value;
+            var mesaj = document.getElementById('bildirimMesaj').value;
+
+            if(!mesaj) {
+                Swal.fire({ icon: 'warning', title: 'Hata', text: 'Lütfen bir mesaj yazın!' });
+                return;
+            }
+
+            $.post('/Admin/BildirimGonder', { kullaniciId: id, baslik: baslik, mesaj: mesaj }, function(res) {
+                if(res.success) {
+                    var modalEl = document.getElementById('bildirimModal');
+                    var modalObj = bootstrap.Modal.getInstance(modalEl);
+                    modalObj.hide();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Başarılı!',
+                        text: res.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Hata', text: res.message });
                 }
             });
         }

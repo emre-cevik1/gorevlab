@@ -594,5 +594,57 @@ namespace GorevTakipSistemi.Controllers
             
             return RedirectToAction("DestekTalepleri");
         }
+        
+        // --- ADMİN/KURUCU: KULLANICILARA BİLDİRİM GÖNDERME ---
+        [HttpPost]
+        public async Task<IActionResult> BildirimGonder(int? kullaniciId, string mesaj, string baslik = "Sistem Bildirimi")
+        {
+            var sessionRol = HttpContext.Session.GetInt32("KullaniciRol") ?? 0;
+            if (sessionRol != (int)KullaniciRol.Admin && sessionRol != (int)KullaniciRol.Owner) 
+                return Json(new { success = false, message = "Yetkisiz İşlem!" });
+
+            if (string.IsNullOrWhiteSpace(mesaj))
+                return Json(new { success = false, message = "Mesaj boş olamaz!" });
+
+            if (kullaniciId.HasValue && kullaniciId.Value > 0)
+            {
+                // Tek bir kullanıcıya gönder
+                _context.Bildirimler.Add(new Bildirim {
+                    KullaniciId = kullaniciId.Value,
+                    Mesaj = $"{baslik}: {mesaj}",
+                    Url = "/Home/Index" // Genel anasayfaya yönlendir
+                });
+                await _context.SaveChangesAsync();
+                
+                await _hubContext.Clients.Group(kullaniciId.Value.ToString()).SendAsync("YeniBildirim", baslik, mesaj, "success", "/Home/Index");
+            }
+            else
+            {
+                // Tüm kullanıcılara gönder (Yasaklı olmayanlar)
+                var aktifKullanicilar = _context.Kullanicilar.Where(u => !u.IsBanned).Select(u => u.Id).ToList();
+                foreach(var id in aktifKullanicilar)
+                {
+                    _context.Bildirimler.Add(new Bildirim {
+                        KullaniciId = id,
+                        Mesaj = $"{baslik}: {mesaj}",
+                        Url = "/Home/Index"
+                    });
+                }
+                await _context.SaveChangesAsync();
+                
+                // SignalR ile herkese toplu gönder (Clients.All da kullanılabilir ama gruplu gitmesi de iyidir)
+                await _hubContext.Clients.All.SendAsync("YeniBildirim", baslik, mesaj, "success", "/Home/Index");
+            }
+
+            _context.SistemLoglari.Add(new SistemLog {
+                KullaniciAdi = (HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Admin") + " (Admin)",
+                YapilanIslem = $"Sistem bildirimi gönderildi. Hedef: {(kullaniciId.HasValue ? kullaniciId.ToString() : "Tümü")}",
+                IpAdresi = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmeyen IP",
+                IslemTarihi = DateTime.Now
+            });
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Bildirim başarıyla fırlatıldı! 🚀" });
+        }
     }
 }
