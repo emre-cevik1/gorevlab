@@ -109,7 +109,6 @@
                                 Takvim
                             </a>
                             <a asp-controller="Gorev" asp-action="Index" class="px-2 py-2 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:-translate-y-0.5 transition-all duration-300 no-underline">Tüm Görevler</a>
-                            <a asp-controller="Iletisim" asp-action="Index" class="px-2 py-2 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:-translate-y-0.5 transition-all duration-300 no-underline">Bize Ulaşın</a>
                         </div>
 
                         <!-- User & Actions -->
@@ -178,18 +177,31 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Profile -->
-                            <a asp-controller="Home" asp-action="Profil" class="hidden md:flex items-center gap-2 pl-2 pr-4 py-1.5 bg-white border border-slate-200 text-sm font-bold text-slate-700 hover:border-indigo-300 rounded-full transition-all duration-300 no-underline shadow-sm hover:shadow-lg hover:-translate-y-1">
-                                <div class="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-inner">
-                                    @basHarfler
+                            <!-- Profile Dropdown -->
+                            <div class="relative group hidden md:block">
+                                <button class="flex items-center gap-2 pl-2 pr-4 py-1.5 bg-white border border-slate-200 text-sm font-bold text-slate-700 hover:border-indigo-300 rounded-full transition-all duration-300 shadow-sm hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+                                    <div class="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-inner">
+                                        @basHarfler
+                                    </div>
+                                    <span>@adSoyad</span>
+                                    <i class="bi bi-chevron-down text-[10px] ml-1 text-slate-400 group-hover:text-indigo-600 transition-colors"></i>
+                                </button>
+                                
+                                <div class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden flex flex-col">
+                                    <a asp-controller="Home" asp-action="Profil" class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3 no-underline border-b border-slate-50">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="bi bi-person"></i></div> Profilim
+                                    </a>
+                                    <a asp-controller="Ekip" asp-action="Index" class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3 no-underline border-b border-slate-50">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="bi bi-people"></i></div> Takımım
+                                    </a>
+                                    <a asp-controller="Iletisim" asp-action="Index" class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3 no-underline border-b border-slate-50">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="bi bi-headset"></i></div> Destek Merkezi
+                                    </a>
+                                    <a asp-controller="Auth" asp-action="Logout" class="px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3 no-underline">
+                                        <div class="w-8 h-8 rounded-xl bg-red-100 text-red-600 flex items-center justify-center"><i class="fa-solid fa-power-off"></i></div> Çıkış Yap
+                                    </a>
                                 </div>
-                                <span>@adSoyad</span>
-                            </a>
-
-                            <a asp-controller="Auth" asp-action="Logout" class="hidden md:flex items-center justify-center w-10 h-10 text-slate-400 hover:text-red-500 hover:bg-red-50 hover:shadow-lg hover:-translate-y-1 rounded-full transition-all duration-300 no-underline" title="Çıkış Yap">
-                                <i class="fa-solid fa-power-off text-lg"></i>
-                            </a>
+                            </div>
 
                             <!-- Mobile Toggle -->
                             <button id="mobile-menu-btn" class="md:hidden ml-2 w-12 h-12 flex items-center justify-center rounded-2xl bg-white text-slate-600 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border border-slate-100">
@@ -213,11 +225,13 @@
                             </div>
                         </div>
 
-                    <div class="grid grid-cols-1 gap-2 mb-8">
+                    <div class="grid grid-cols-1 gap-2 mb-4">
                         <a asp-controller="Home" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-house-door-fill text-indigo-600 text-xl me-3"></i> Ana Sayfa</a>
                         <a asp-controller="Home" asp-action="Dashboard" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-speedometer2 text-indigo-600 text-xl me-3"></i> Dashboard</a>
                         <a asp-controller="Gorev" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-list-task text-indigo-600 text-xl me-3"></i> Tüm Görevler</a>
-                        <a asp-controller="Iletisim" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-envelope-paper-fill text-indigo-600 text-xl me-3"></i> Bize Ulaşın</a>
+                        <a asp-controller="Ekip" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-people text-indigo-600 text-xl me-3"></i> Takımım</a>
+                        <a asp-controller="Iletisim" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-headset text-indigo-600 text-xl me-3"></i> Destek Merkezi</a>
+                        <a asp-controller="Auth" asp-action="Logout" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-red-600 bg-red-50/50 hover:bg-red-100 hover:shadow-md hover:-translate-y-1 transition-all no-underline mt-4"><i class="fa-solid fa-power-off text-red-600 text-xl me-3"></i> Çıkış Yap</a>
                     </div>
                         
                         <div class="border-t border-slate-200/50 my-4 mx-2"></div>
