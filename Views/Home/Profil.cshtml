@@ -37,7 +37,7 @@
                 </div>
 
                 <div class="card-body p-0 bg-slate-50">
-                    <div class="row g-0">
+                    <div class="row g-0 border-b border-slate-200">
                         <div class="col-md-6 p-6 border-e border-slate-200 bg-white">
                             <h4 class="font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2"><i class="bi bi-person-lines-fill me-2 text-indigo-500"></i>Kişisel Bilgiler</h4>
                             <form asp-controller="Home" asp-action="Profil" method="post">
@@ -78,6 +78,22 @@
                                     <button type="submit" class="btn antigravity-btn rounded-full text-white font-bold py-2 w-full">Şifreyi Güncelle</button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-0">
+                        <div class="col-12 p-6 bg-slate-50">
+                            <h4 class="font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2"><i class="bi bi-info-circle me-2 text-indigo-500"></i>Hakkında ve Kurallar</h4>
+                            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                                <a asp-controller="Home" asp-action="Privacy" class="antigravity-card flex items-center justify-center gap-2 p-4 text-slate-700 hover:text-indigo-600 hover:bg-white transition-all w-full no-underline cursor-pointer group">
+                                    <i class="bi bi-shield-check text-2xl group-hover:scale-110 transition-transform"></i>
+                                    <span class="font-bold">KVKK ve Gizlilik Politikası</span>
+                                </a>
+                                <a asp-controller="Home" asp-action="About" class="antigravity-card flex items-center justify-center gap-2 p-4 text-slate-700 hover:text-indigo-600 hover:bg-white transition-all w-full no-underline cursor-pointer group">
+                                    <i class="bi bi-building text-2xl group-hover:scale-110 transition-transform"></i>
+                                    <span class="font-bold">Hakkımızda</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>

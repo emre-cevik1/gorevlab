@@ -1,17 +1,31 @@
 @{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "KVKK ve Gizlilik Politikası";
 }
 
-<div class="max-w-3xl mx-auto mt-10 px-4 mb-10">
-    <div class="bg-[#242440] rounded-2xl border border-[#2e2e4a] neo-raised p-8 sm:p-10">
-        <div class="flex items-center gap-3 mb-6">
-            <div class="w-12 h-12 bg-crimson-950 rounded-xl flex items-center justify-center border border-crimson-800/50">
-                <i class="bi bi-shield-lock text-2xl text-crimson-400"></i>
+<div class="max-w-4xl mx-auto mt-10 px-4 mb-10">
+    <div class="antigravity-card p-8 sm:p-10">
+        <div class="flex items-center gap-4 mb-8 pb-6 border-b border-slate-100">
+            <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center border border-indigo-100">
+                <i class="bi bi-shield-check text-3xl text-indigo-600"></i>
             </div>
-            <h1 class="text-2xl font-black text-gray-200 m-0">@ViewData["Title"]</h1>
+            <div>
+                <h1 class="text-2xl font-black text-slate-800 m-0">@ViewData["Title"]</h1>
+                <p class="text-sm text-slate-500 m-0 mt-1">Son Güncelleme: @DateTime.Now.ToString("dd.MM.yyyy")</p>
+            </div>
         </div>
-        <div class="bg-[#1e1e38] rounded-xl border border-[#2e2e4a] p-6 neo-inset">
-            <p class="text-gray-400 m-0">Use this page to detail your site's privacy policy.</p>
+        
+        <div class="prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-slate-800 prose-p:text-slate-600 prose-li:text-slate-600">
+            <h3>1. Veri Toplama</h3>
+            <p>Sistemimizi kullanırken, e-posta adresiniz, adınız, soyadınız ve IP adresiniz gibi temel bilgileri sistemin güvenliği ve işleyişi amacıyla toplamaktayız.</p>
+            
+            <h3>2. Veri Güvenliği</h3>
+            <p>Şifreleriniz geri döndürülemez kriptografik (hash) yöntemlerle şifrelenerek veritabanımızda saklanmaktadır. Sistem kurucusu veya yöneticileri dahil hiç kimse orijinal şifrenizi göremez.</p>
+            
+            <h3>3. Verilerin İşlenme Amacı</h3>
+            <p>Topladığımız veriler sadece GörevLab sistemindeki görev takibi, bildirimler ve yetkilendirme işlemleri için kullanılmaktadır. Verileriniz hiçbir şekilde üçüncü şahıs veya kurumlarla paylaşılmaz.</p>
+            
+            <h3>4. Haklarınız</h3>
+            <p>Sistemdeki tüm verilerinizi görüntüleme, düzeltme veya hesabınızın tamamen silinmesini talep etme hakkına sahipsiniz. Destek talepleri bölümünden bizimle iletişime geçebilirsiniz.</p>
         </div>
     </div>
 </div>

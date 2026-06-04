@@ -260,5 +260,16 @@ namespace GorevTakipSistemi.Controllers
 
             return true;
         }
+
+        // --- 5. HAKKIMIZDA VE GİZLİLİK POLİTİKASI ---
+        public IActionResult About()
+        {
+            return View();
+        }
+
+        public IActionResult Privacy()
+        {
+            return View();
+        }
     }
 }
