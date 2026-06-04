@@ -213,12 +213,12 @@
                     </div>
                 </div>
 
-                <!-- Glassmorphism Off-canvas Mobile Menu -->
-                <div id="mobile-menu" class="absolute top-[100%] left-0 w-full glass-nav border-t border-white/40 shadow-2xl z-40 px-4 py-6 rounded-b-3xl">
+                <!-- Solid Mobile Menu -->
+                <div id="mobile-menu" class="absolute top-[100%] left-0 w-full bg-slate-50 border-t border-slate-200 shadow-2xl z-50 px-4 py-6 rounded-b-3xl max-h-[80vh] overflow-y-auto">
                     <div class="space-y-3">
                         
-                        <div class="flex items-center gap-4 px-5 py-4 mb-4 bg-white/80 rounded-3xl border border-white/60 shadow-sm">
-                            <div class="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md">
+                        <div class="flex items-center gap-4 px-5 py-4 mb-4 bg-white rounded-3xl border border-slate-200 shadow-sm">
+                            <div class="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md shrink-0">
                                 @basHarfler
                             </div>
                             <div>
@@ -227,24 +227,26 @@
                             </div>
                         </div>
 
-                    <div class="grid grid-cols-1 gap-2 mb-4">
-                        <a asp-controller="Home" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-house-door-fill text-indigo-600 text-xl me-3"></i> Ana Sayfa</a>
-                        <a asp-controller="Home" asp-action="Dashboard" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-speedometer2 text-indigo-600 text-xl me-3"></i> Dashboard</a>
-                        <a asp-controller="Gorev" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-list-task text-indigo-600 text-xl me-3"></i> Tüm Görevler</a>
-                        <a asp-controller="Ekip" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-people text-indigo-600 text-xl me-3"></i> Takımım</a>
-                        <a asp-controller="Iletisim" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white/50 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-headset text-indigo-600 text-xl me-3"></i> Destek Merkezi</a>
-                        <a asp-controller="Auth" asp-action="Logout" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-red-600 bg-red-50/50 hover:bg-red-100 hover:shadow-md hover:-translate-y-1 transition-all no-underline mt-4"><i class="fa-solid fa-power-off text-red-600 text-xl me-3"></i> Çıkış Yap</a>
-                    </div>
+                        <div class="grid grid-cols-1 gap-2 mb-4">
+                            <a asp-controller="Home" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white border border-slate-100 hover:bg-slate-50 transition-all no-underline"><i class="bi bi-house-door-fill text-indigo-600 text-xl w-8"></i> Ana Sayfa</a>
+                            <a asp-controller="Home" asp-action="Dashboard" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white border border-slate-100 hover:bg-slate-50 transition-all no-underline"><i class="bi bi-speedometer2 text-indigo-600 text-xl w-8"></i> Dashboard</a>
+                            <a asp-controller="Gorev" asp-action="Takvim" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white border border-slate-100 hover:bg-slate-50 transition-all no-underline"><i class="bi bi-calendar-event text-indigo-600 text-xl w-8"></i> Takvim</a>
+                            <a asp-controller="Gorev" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white border border-slate-100 hover:bg-slate-50 transition-all no-underline"><i class="bi bi-list-task text-indigo-600 text-xl w-8"></i> Tüm Görevler</a>
+                            <a asp-controller="Ekip" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white border border-slate-100 hover:bg-slate-50 transition-all no-underline"><i class="bi bi-people text-indigo-600 text-xl w-8"></i> Takımım</a>
+                            <a asp-controller="Iletisim" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white border border-slate-100 hover:bg-slate-50 transition-all no-underline"><i class="bi bi-headset text-indigo-600 text-xl w-8"></i> Destek Merkezi</a>
+                        </div>
                         
-                        <div class="border-t border-slate-200/50 my-4 mx-2"></div>
+                        <div class="border-t border-slate-200 my-4 mx-2"></div>
 
                         @if (Context.Session.GetInt32("KullaniciRol") == (int)GorevTakipSistemi.Models.KullaniciRol.Admin || Context.Session.GetInt32("KullaniciRol") == (int)GorevTakipSistemi.Models.KullaniciRol.Owner)
                         {
-                            <a asp-controller="Admin" asp-action="Kullanicilar" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100 hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="fa-solid fa-shield-halved text-xl me-3"></i> Admin Paneli</a>
-                            <a asp-controller="Admin" asp-action="DestekTalepleri" class="flex items-center px-5 py-4 mt-2 rounded-2xl text-base font-bold text-amber-700 bg-amber-50/80 hover:bg-amber-100 hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="bi bi-ticket-detailed-fill text-xl me-3"></i> Destek Talepleri</a>
+                            <div class="grid grid-cols-1 gap-2 mb-4">
+                                <a asp-controller="Admin" asp-action="Kullanicilar" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 transition-all no-underline"><i class="fa-solid fa-shield-halved text-xl w-8"></i> Admin Paneli</a>
+                                <a asp-controller="Admin" asp-action="DestekTalepleri" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-amber-700 bg-amber-50 border border-amber-100 hover:bg-amber-100 transition-all no-underline"><i class="bi bi-ticket-detailed-fill text-xl w-8"></i> Destek Talepleri</a>
+                            </div>
                         }
                         
-                        <a asp-controller="Auth" asp-action="Logout" class="flex items-center px-5 py-4 mt-4 rounded-2xl text-base font-bold text-red-600 bg-red-50/80 hover:bg-red-100 hover:shadow-md hover:-translate-y-1 transition-all no-underline"><i class="fa-solid fa-power-off text-xl me-3"></i> Çıkış Yap</a>
+                        <a asp-controller="Auth" asp-action="Logout" class="flex items-center px-5 py-4 mt-4 rounded-2xl text-base font-bold text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 transition-all no-underline"><i class="fa-solid fa-power-off text-xl w-8"></i> Çıkış Yap</a>
                     </div>
                 </div>
             </nav>
@@ -252,7 +254,7 @@
     </header>
     
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 sm:mt-10">
-        <main role="main" class="pb-16 animate-fade-in-up relative">
+        <main role="main" class="pb-28 sm:pb-16 animate-fade-in-up relative">
             @RenderBody()
         </main>
     </div>
