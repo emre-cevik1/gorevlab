@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using System.Net.Mail;
 using System.Net;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.AspNetCore.SignalR;
+using GorevTakipSistemi.Hubs;
 
 namespace GorevTakipSistemi.Controllers
 {
@@ -17,13 +19,15 @@ namespace GorevTakipSistemi.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _config;
-        private readonly Microsoft.Extensions.Caching.Memory.IMemoryCache _cache;
+        private readonly IMemoryCache _cache;
+        private readonly IHubContext<BildirimHub> _hubContext;
 
-        public AdminController(AppDbContext context, IConfiguration config, Microsoft.Extensions.Caching.Memory.IMemoryCache cache)
+        public AdminController(AppDbContext context, IConfiguration config, IMemoryCache cache, IHubContext<BildirimHub> hubContext)
         {
             _context = context;
             _config = config;
             _cache = cache;
+            _hubContext = hubContext;
         }
 
         // --- KULLANICI LİSTESİ ---
@@ -464,6 +468,16 @@ namespace GorevTakipSistemi.Controllers
                 }
 
                 TempData["Success"] = "Destek talebi başarıyla cevaplandı ve kullanıcıya mail gönderildi!";
+
+                // 🔔 Gerçek Zamanlı Bildirim (SignalR)
+                if (destekMesaji.KullaniciId != null)
+                {
+                    await _hubContext.Clients.Group(destekMesaji.KullaniciId.ToString()).SendAsync("YeniBildirim", 
+                        "Destek Talebiniz Cevaplandı", 
+                        $"'{destekMesaji.Konu}' konulu talebiniz yöneticilerimiz tarafından yanıtlandı.",
+                        "info",
+                        "/Iletisim/DestekTaleplerim");
+                }
             }
             return RedirectToAction("DestekTalepleri");
             

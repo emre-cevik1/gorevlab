@@ -26,6 +26,24 @@
                             <label asp-for="Aciklama" class="form-label font-bold text-slate-800">Görev Detayları</label>
                             <textarea asp-for="Aciklama" class="antigravity-input form-control text-slate-800 placeholder-slate-400 py-3" rows="4" placeholder="Görev ile ilgili notlarınızı buraya yazabilirsiniz..."></textarea>
                         </div>
+                        <div class="mb-4">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="form-label font-bold text-slate-800 mb-0">Etiketler</label>
+                                <button type="button" onclick="yeniEtiketEkle()" class="text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-md transition-colors border-0">
+                                    <i class="bi bi-plus"></i> Yeni Etiket
+                                </button>
+                            </div>
+                            <select id="etiketSelect" name="seciliEtiketler" class="antigravity-input form-select text-slate-800 py-3" multiple style="height: 120px;">
+                                @if (ViewBag.Etiketler != null)
+                                {
+                                    foreach (var etiket in (IEnumerable<GorevTakipSistemi.Models.Etiket>)ViewBag.Etiketler)
+                                    {
+                                        <option value="@etiket.Id" style="color: @etiket.RenkHex; font-weight: bold;">@etiket.Ad</option>
+                                    }
+                                }
+                            </select>
+                            <small class="text-slate-500 mt-1 d-block"><i class="bi bi-info-circle"></i> Birden fazla etiket seçmek için CTRL (veya CMD) tuşuna basılı tutarak tıklayın.</small>
+                        </div>
                         
                         <div class="mb-4">
                             <label asp-for="Tarih" class="form-label font-bold text-slate-800">Son Teslim Tarihi</label>
@@ -65,5 +83,50 @@
             $('.form-karti').css({ 'margin-top': '50px', 'opacity': '0', 'display': 'block' })
                 .animate({ 'margin-top': '0px', 'opacity': '1' }, 600);
         });
+
+        function yeniEtiketEkle() {
+            Swal.fire({
+                title: 'Yeni Etiket Ekle',
+                html: `
+                    <input id="swal-input1" class="swal2-input placeholder-slate-400" placeholder="Etiket Adı (Örn: #Yazılım)">
+                    <div class="mt-3 flex items-center justify-center gap-3">
+                        <label class="font-bold text-slate-700">Etiket Rengi:</label>
+                        <input id="swal-input2" type="color" class="w-10 h-10 rounded cursor-pointer border-0 p-0" value="#4f46e5">
+                    </div>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Ekle',
+                cancelButtonText: 'İptal',
+                preConfirm: () => {
+                    const ad = document.getElementById('swal-input1').value;
+                    const renk = document.getElementById('swal-input2').value;
+                    if (!ad) {
+                        Swal.showValidationMessage('Lütfen bir etiket adı girin');
+                    }
+                    return { ad: ad, renk: renk }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/Gorev/EtiketEkle',
+                        type: 'POST',
+                        data: { ad: result.value.ad, renkHex: result.value.renk },
+                        success: function (res) {
+                            if (res.success) {
+                                // Select kutusuna ekle
+                                var newOption = new Option(res.data.ad, res.data.id, true, true);
+                                newOption.style.color = res.data.renkHex;
+                                newOption.style.fontWeight = 'bold';
+                                $('#etiketSelect').append(newOption).trigger('change');
+                                toastr.success("Etiket eklendi!");
+                            } else {
+                                toastr.error(res.message);
+                            }
+                        }
+                    });
+                }
+            });
+        }
     </script>
 }

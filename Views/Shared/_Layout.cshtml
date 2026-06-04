@@ -230,7 +230,6 @@
                         <div class="grid grid-cols-1 gap-2 mb-4">
                             <a asp-controller="Home" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white border border-slate-100 hover:bg-slate-50 transition-all no-underline"><i class="bi bi-house-door-fill text-indigo-600 text-xl w-8"></i> Ana Sayfa</a>
                             <a asp-controller="Home" asp-action="Dashboard" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white border border-slate-100 hover:bg-slate-50 transition-all no-underline"><i class="bi bi-speedometer2 text-indigo-600 text-xl w-8"></i> Dashboard</a>
-                            <a asp-controller="Gorev" asp-action="Takvim" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white border border-slate-100 hover:bg-slate-50 transition-all no-underline"><i class="bi bi-calendar-event text-indigo-600 text-xl w-8"></i> Takvim</a>
                             <a asp-controller="Gorev" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white border border-slate-100 hover:bg-slate-50 transition-all no-underline"><i class="bi bi-list-task text-indigo-600 text-xl w-8"></i> Tüm Görevler</a>
                             <a asp-controller="Ekip" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white border border-slate-100 hover:bg-slate-50 transition-all no-underline"><i class="bi bi-people text-indigo-600 text-xl w-8"></i> Takımım</a>
                             <a asp-controller="Iletisim" asp-action="Index" class="flex items-center px-5 py-4 rounded-2xl text-base font-bold text-slate-700 bg-white border border-slate-100 hover:bg-slate-50 transition-all no-underline"><i class="bi bi-headset text-indigo-600 text-xl w-8"></i> Destek Merkezi</a>
@@ -446,6 +445,96 @@
         }
     </script>
 
+
+    <!-- SignalR Kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+    <!-- Global SignalR ve Toast Bildirim Ayarları -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // SignalR Bağlantısı Kur
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/bildirimHub")
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+            // Sunucudan 'YeniBildirim' tetiklendiğinde
+            connection.on("YeniBildirim", function (baslik, mesaj, tip, url) {
+                // Toastr ile sağ alttan bildirim göster
+                toastr.options = {
+                    "closeButton": true,
+                    "progressBar": true,
+                    "positionClass": "toast-bottom-right",
+                    "timeOut": "5000",
+                    "onclick": url ? function() { window.location.href = url; } : null
+                };
+
+                if (tip === "success") toastr.success(mesaj, baslik);
+                else if (tip === "error") toastr.error(mesaj, baslik);
+                else if (tip === "warning") toastr.warning(mesaj, baslik);
+                else toastr.info(mesaj, baslik);
+
+                // Zil ikonunu titreştir ve rozeti güncelle
+                const bell = document.querySelector('.bi-bell-fill');
+                if(bell) {
+                    bell.parentElement.classList.add('animate-bounce');
+                    setTimeout(() => bell.parentElement.classList.remove('animate-bounce'), 3000);
+                }
+            });
+
+            // Bağlantıyı başlat ve KullaniciBaglandi methodunu çağır
+            connection.start().then(function () {
+                console.log("SignalR Bağlantısı Başarılı!");
+                
+                // Kullanıcı ID'sini server'a gönder (ViewBag'den veya metadan alınabilir)
+                // Şimdilik Session'dan render ettiğimiz global JavaScript değişkeniyle alalım
+                @if(Context.Session.GetInt32("KullaniciId") != null)
+                {
+                    <text>
+                    var kId = '@Context.Session.GetInt32("KullaniciId")';
+                    connection.invoke("KullaniciBaglandi", kId).catch(function (err) {
+                        return console.error(err.toString());
+                    });
+                    </text>
+                }
+            }).catch(function (err) {
+                return console.error("SignalR Bağlantı Hatası: " + err.toString());
+            });
+        });
+
+        // --- GLOBAL ALT GÖREV (CHECKLIST) FONKSİYONLARI ---
+        function altGorevEkle(gorevId) {
+            const baslik = $('#yeniAltGorevBaslik').val();
+            if (!baslik) return toastr.warning("Lütfen alt görev başlığı girin.");
+
+            $.post('/Gorev/AltGorevEkle', { gorevId: gorevId, baslik: baslik }, function (res) {
+                if (res.success) {
+                    toastr.success("Alt görev eklendi.");
+                    // Detay modalini yenile (Mevcut Modal/Offcanvas mantığına göre GorevDetayGetir veya DetayGetir çağrılmalı)
+                    if(typeof gorevDetayGetir === 'function') {
+                        gorevDetayGetir(gorevId); // Index sayfasındaki fonksiyon
+                    } else if (typeof openGorevModal === 'function') {
+                        openGorevModal(gorevId); // Takvim sayfasındaki fonksiyon
+                    }
+                } else {
+                    toastr.error(res.message);
+                }
+            });
+        }
+
+        function altGorevDurumDegistir(altGorevId, durum) {
+            $.post('/Gorev/AltGorevDurumDegistir', { id: altGorevId, tamamlandiMi: durum }, function (res) {
+                if (res.success) {
+                    // Detay modalini yenile
+                    if(typeof gorevDetayGetir === 'function') {
+                        gorevDetayGetir(res.gorevId);
+                    } else if (typeof openGorevModal === 'function') {
+                        openGorevModal(res.gorevId);
+                    }
+                }
+            });
+        }
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

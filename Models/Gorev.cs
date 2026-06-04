@@ -31,7 +31,10 @@ namespace GorevTakipSistemi.Models
         public virtual Kullanici? AtayanKullanici { get; set; }
 
         public int? EkipId { get; set; }
-        public virtual Ekip Ekip { get; set; }
+        public virtual Ekip? Ekip { get; set; }
+
+        public virtual ICollection<AltGorev>? AltGorevler { get; set; }
+        public virtual ICollection<GorevEtiket>? GorevEtiketleri { get; set; }
 
         // Bu görevi kim tamamladı? (Çoklu tamamlama sistemi için)
         public virtual ICollection<GorevTamamlama> Tamamlamalar { get; set; } = new List<GorevTamamlama>();

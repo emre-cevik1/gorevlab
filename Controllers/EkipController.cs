@@ -7,16 +7,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
+using GorevTakipSistemi.Hubs;
 
 namespace GorevTakipSistemi.Controllers
 {
     public class EkipController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IHubContext<BildirimHub> _hubContext;
 
-        public EkipController(AppDbContext context)
+        public EkipController(AppDbContext context, IHubContext<BildirimHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         // --- KULLANICININ EKİPLERİNİ VE DAVETLERİNİ LİSTELE ---
@@ -184,6 +188,9 @@ namespace GorevTakipSistemi.Controllers
                         Mesaj = $"{adSoyad}, '{ekip.Ad}' ekibine yeni bir görev ekledi: {gorevAdi}",
                         Url = $"/Ekip/Detay/{ekipId}"
                     });
+                    
+                    // SignalR ile Anlık Bildirim
+                    await _hubContext.Clients.Group(uyeId.ToString()).SendAsync("YeniBildirim", "Yeni Ekip Görevi!", $"{adSoyad}, '{ekip.Ad}' ekibine yeni bir görev ekledi: {gorevAdi}", "info", $"/Ekip/Detay/{ekipId}");
                 }
                 await _context.SaveChangesAsync();
             }
@@ -250,14 +257,18 @@ namespace GorevTakipSistemi.Controllers
 
             var gonderen = await _context.Kullanicilar.FindAsync(gonderenId.Value);
             var ekip = await _context.Ekipler.FindAsync(ekipId);
+            string gonderenAdi = gonderen?.Ad ?? "Biri";
             
             _context.Bildirimler.Add(new Bildirim {
                 KullaniciId = aliciId,
-                Mesaj = $"{gonderen?.Ad ?? "Biri"} seni '{ekip?.Ad}' ekibine davet etti!",
+                Mesaj = $"{gonderenAdi} seni '{ekip?.Ad}' ekibine davet etti!",
                 Url = "/Ekip/Index"
             });
 
             await _context.SaveChangesAsync();
+
+            // SignalR ile Anlık Davet Bildirimi
+            await _hubContext.Clients.Group(aliciId.ToString()).SendAsync("YeniBildirim", "Yeni Ekip Daveti!", $"{gonderenAdi}, seni '{ekip?.Ad}' ekibine davet etti.", "info", "/Ekip/Index");
 
             return Json(new { success = true, message = "Davet füzeleri başarıyla ateşlendi! 🚀" });
         }

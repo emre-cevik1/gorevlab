@@ -8,16 +8,21 @@ using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 
+using Microsoft.AspNetCore.SignalR;
+using GorevTakipSistemi.Hubs;
+
 namespace GorevTakipSistemi.Controllers
 {
     [YetkiKontrol] // Giriş yapmayan kullanıcılar bu Controller'a erişemez.
     public class GorevController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IHubContext<BildirimHub> _hubContext;
 
-        public GorevController(AppDbContext context)
+        public GorevController(AppDbContext context, IHubContext<BildirimHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         // --- 1. TÜM GÖREVLERİ LİSTELE (ANA SAYFA İÇİN OPTİMİZE EDİLDİ) ---
@@ -77,7 +82,7 @@ namespace GorevTakipSistemi.Controllers
             return View("Index", gorevler);
         }
 
-        // --- 4. BEKLEYEN GÖREVLER (İleri Tarihliler) ---
+
         public IActionResult Bekleyenler()
         {
             int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
@@ -99,29 +104,69 @@ namespace GorevTakipSistemi.Controllers
         {
             int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
             
-            // Kullanıcının ait olduğu veya kurduğu ekibi bul
-            var ekip = _context.Ekipler.FirstOrDefault(e => e.KurucuId == kullaniciId || _context.EkipUyeleri.Any(eu => eu.EkipId == e.Id && eu.KullaniciId == kullaniciId));
-            
-            if (ekip != null)
-            {
-                var uyeler = _context.EkipUyeleri
-                                     .Where(eu => eu.EkipId == ekip.Id)
-                                     .Select(eu => eu.Kullanici)
-                                     .ToList();
-                
-                var kurucu = _context.Kullanicilar.Find(ekip.KurucuId);
-                if (kurucu != null && !uyeler.Any(u => u.Id == kurucu.Id)) uyeler.Add(kurucu);
-
-                ViewBag.EkipUyeleri = uyeler;
-                ViewBag.EkipId = ekip.Id;
-            }
+            // Mevcut etiketleri getir
+            ViewBag.Etiketler = _context.Etiketler.Where(e => e.EkipId == null || _context.EkipUyeleri.Any(eu => eu.KullaniciId == kullaniciId && eu.EkipId == e.EkipId)).ToList();
 
             return View();
         }
 
+        // --- ETİKET EKLEME (AJAX) ---
+        [HttpPost]
+        public IActionResult EtiketEkle(string ad, string renkHex)
+        {
+            if (string.IsNullOrWhiteSpace(ad)) return Json(new { success = false, message = "Etiket adı boş olamaz!" });
+            
+            var me = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
+            // Sadece rengi veya adı aynı olan var mı kontrolü eklenebilir.
+            var yeniEtiket = new Etiket
+            {
+                Ad = ad,
+                RenkHex = renkHex ?? "#4f46e5",
+                // İstersen EkipId de atayabilirsin, şu an basit tutuyoruz
+            };
+
+            _context.Etiketler.Add(yeniEtiket);
+            _context.SaveChanges();
+
+            return Json(new { success = true, data = new { id = yeniEtiket.Id, ad = yeniEtiket.Ad, renkHex = yeniEtiket.RenkHex } });
+        }
+
+        // --- ALT GÖREV EKLEME (AJAX) ---
+        [HttpPost]
+        public IActionResult AltGorevEkle(int gorevId, string baslik)
+        {
+            if (string.IsNullOrWhiteSpace(baslik)) return Json(new { success = false, message = "Başlık boş olamaz!" });
+            
+            var altGorev = new AltGorev
+            {
+                GorevId = gorevId,
+                Baslik = baslik,
+                TamamlandiMi = false
+            };
+            
+            _context.AltGorevler.Add(altGorev);
+            _context.SaveChanges();
+            
+            return Json(new { success = true });
+        }
+
+        // --- ALT GÖREV DURUM DEĞİŞTİRME (AJAX) ---
+        [HttpPost]
+        public IActionResult AltGorevDurumDegistir(int id, bool tamamlandiMi)
+        {
+            var altGorev = _context.AltGorevler.Find(id);
+            if(altGorev != null)
+            {
+                altGorev.TamamlandiMi = tamamlandiMi;
+                _context.SaveChanges();
+                return Json(new { success = true, gorevId = altGorev.GorevId });
+            }
+            return Json(new { success = false });
+        }
+
         // --- 6. YENİ GÖREV EKLEME İŞLEMİ (POST) ---
         [HttpPost]
-        public IActionResult Create(Gorev gorev, int atananKullaniciId)
+        public IActionResult Create(Gorev gorev, List<int> seciliEtiketler)
         {
             string zararliKodDeseni = @"<[^>]+>"; 
             if (Regex.IsMatch(gorev.GorevAdi ?? "", zararliKodDeseni) || Regex.IsMatch(gorev.Aciklama ?? "", zararliKodDeseni))
@@ -132,25 +177,14 @@ namespace GorevTakipSistemi.Controllers
 
             int me = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
             
-            if (atananKullaniciId > 0)
-            {
-                gorev.KullaniciId = atananKullaniciId;
-                if (atananKullaniciId != me) 
-                {
-                    gorev.AtayanKullaniciId = me;
-                }
-            }
-            else
-            {
-                gorev.KullaniciId = me;
-            }
-
+            // Sadece kendine atanıyor
+            gorev.KullaniciId = me;
+            gorev.AtayanKullaniciId = null;
             gorev.DurumAktifMi = true; // Yeni görev eklendiğinde aktiftir
-            
+
             _context.Gorevler.Add(gorev);
             _context.SaveChanges();
 
-            // Eğer başkasına atandıysa BİLDİRİM GÖNDER
             if (gorev.KullaniciId != me)
             {
                 string adSoyad = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Biri";
@@ -160,6 +194,9 @@ namespace GorevTakipSistemi.Controllers
                     Url = $"/Gorev/Details/{gorev.Id}"
                 });
                 _context.SaveChanges();
+                
+                // SignalR ile Anlık Bildirim
+                _hubContext.Clients.Group(gorev.KullaniciId.ToString()).SendAsync("YeniBildirim", "Yeni Görev!", $"{adSoyad} sana '{gorev.GorevAdi}' görevini atadı.", "info", $"/Gorev/Details/{gorev.Id}");
             }
 
             // EKİP AKTİVİTE LOGLAMA
@@ -218,9 +255,11 @@ namespace GorevTakipSistemi.Controllers
             });
             _context.SaveChanges();
 
+            // SignalR ile Anlık Bildirim
+            _hubContext.Clients.Group(yeniKullaniciId.ToString()).SendAsync("YeniBildirim", "Yeni Görev Ataması!", $"{adSoyad} sana '{gorev.GorevAdi}' görevini atadı.", "info", $"/Ekip/Detay/{gorev.EkipId}");
+
             return Json(new { success = true });
         }
-
 
         public IActionResult Details(int id)
         {
@@ -365,8 +404,11 @@ namespace GorevTakipSistemi.Controllers
         {
             int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
             
-            // Sadece giriş yapan kullanıcı kendi görevini görüntüleyebilir!
-            var gorev = _context.Gorevler.FirstOrDefault(g => g.Id == id && g.KullaniciId == kullaniciId);
+            // Sadece giriş yapan kullanıcı (veya kurucusu) kendi görevini görüntüleyebilir!
+            var gorev = _context.Gorevler
+                                .Include(g => g.AltGorevler)
+                                .Include(g => g.GorevEtiketleri).ThenInclude(ge => ge.Etiket)
+                                .FirstOrDefault(g => g.Id == id && (g.KullaniciId == kullaniciId || g.AtayanKullaniciId == kullaniciId || _context.EkipUyeleri.Any(eu => eu.EkipId == g.EkipId && eu.KullaniciId == kullaniciId)));
             
             if (gorev == null) 
             {

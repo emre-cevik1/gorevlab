@@ -49,6 +49,8 @@ namespace GorevTakipSistemi.Controllers
             if (kullaniciId == null) return RedirectToAction("Login", "Auth");
 
             var kullanicininGorevleri = _context.Gorevler
+                                        .Include(g => g.AltGorevler)
+                                        .Include(g => g.GorevEtiketleri).ThenInclude(ge => ge.Etiket)
                                         .Where(g => g.KullaniciId == kullaniciId && g.EkipId == null)
                                         .ToList();
 
@@ -58,7 +60,9 @@ namespace GorevTakipSistemi.Controllers
                                      .ToList();
 
             var ekipGorevleri = _context.Gorevler
-                                        .Include(g => g.Ekip) 
+                                        .Include(g => g.Ekip)
+                                        .Include(g => g.AltGorevler)
+                                        .Include(g => g.GorevEtiketleri).ThenInclude(ge => ge.Etiket)
                                         .Where(g => g.EkipId != null && ekipIdleri.Contains(g.EkipId.Value) && g.DurumAktifMi)
                                         .OrderBy(g => g.Tarih)
                                         .ToList();

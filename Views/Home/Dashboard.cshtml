@@ -84,15 +84,48 @@
                 {
                     @foreach (var gorev in gunlukGorevler)
                     {
-                        <div onclick="gorevDetayAc(@gorev.Id)" class="gorev-item flex items-center justify-between p-4 border-b border-slate-100 hover:bg-slate-50 transition-all hover:scale-101 hover:-translate-y-1 cursor-pointer group">
-                            <span class="gorev-adi text-[15px] font-semibold @(!gorev.DurumAktifMi ? "text-slate-400 line-through" : "text-slate-700 group-hover:text-indigo-600") transition-colors">
-                                @gorev.GorevAdi
-                            </span>
-                            @if(!gorev.DurumAktifMi) {
-                                <span class="text-xs text-slate-500 font-bold bg-slate-100 px-3 py-1 rounded-full border border-slate-200">Bitti</span>
-                            } else {
-                                <span class="text-xs text-indigo-600 font-bold bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">Aktif</span>
-                            }
+                        <div onclick="gorevDetayAc(@gorev.Id)" class="gorev-item flex flex-col p-4 border-b border-slate-100 hover:bg-slate-50 transition-all hover:scale-101 hover:-translate-y-1 cursor-pointer group">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="gorev-adi text-[15px] font-semibold @(!gorev.DurumAktifMi ? "text-slate-400 line-through" : "text-slate-700 group-hover:text-indigo-600") transition-colors">
+                                    @gorev.GorevAdi
+                                </span>
+                                @if(!gorev.DurumAktifMi) {
+                                    <span class="text-xs text-slate-500 font-bold bg-slate-100 px-3 py-1 rounded-full border border-slate-200">Bitti</span>
+                                } else {
+                                    <span class="text-xs text-indigo-600 font-bold bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">Aktif</span>
+                                }
+                            </div>
+                            
+                            <div class="flex flex-wrap items-center justify-between gap-2 mt-1">
+                                <!-- Etiketler -->
+                                <div class="flex flex-wrap gap-1">
+                                    @if(gorev.GorevEtiketleri != null && gorev.GorevEtiketleri.Any())
+                                    {
+                                        foreach(var ge in gorev.GorevEtiketleri.Take(2))
+                                        {
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded border" style="background-color: @(ge.Etiket.RenkHex)15; color: @ge.Etiket.RenkHex; border-color: @(ge.Etiket.RenkHex)30;">
+                                                @ge.Etiket.Ad
+                                            </span>
+                                        }
+                                        if(gorev.GorevEtiketleri.Count > 2)
+                                        {
+                                            <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-1 py-0.5 rounded border border-slate-200">
+                                                +@(gorev.GorevEtiketleri.Count - 2)
+                                            </span>
+                                        }
+                                    }
+                                </div>
+
+                                <!-- Alt Görev (Checklist) İlerlemesi -->
+                                @if(gorev.AltGorevler != null && gorev.AltGorevler.Any())
+                                {
+                                    var biten = gorev.AltGorevler.Count(a => a.TamamlandiMi);
+                                    var toplam = gorev.AltGorevler.Count();
+                                    <div class="flex items-center gap-1.5 text-xs font-bold text-slate-500" title="Checklist İlerlemesi">
+                                        <i class="bi bi-check2-square text-indigo-500"></i> @biten/@toplam
+                                    </div>
+                                }
+                            </div>
                         </div>
                     }
                 }
@@ -117,11 +150,38 @@
                 {
                     @foreach (var gorev in aktifGorevler)
                     {
-                        <div onclick="gorevDetayAc(@gorev.Id)" class="gorev-item flex items-center justify-between p-4 border-b border-slate-100 hover:bg-slate-50 transition-all hover:scale-101 hover:-translate-y-1 cursor-pointer group">
-                            <span class="gorev-adi text-[15px] font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors">
-                                @gorev.GorevAdi
-                            </span>
-                            <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">@gorev.Tarih.ToString("dd.MM.yyyy")</span>
+                        <div onclick="gorevDetayAc(@gorev.Id)" class="gorev-item flex flex-col p-4 border-b border-slate-100 hover:bg-slate-50 transition-all hover:scale-101 hover:-translate-y-1 cursor-pointer group">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="gorev-adi text-[15px] font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors">
+                                    @gorev.GorevAdi
+                                </span>
+                                <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">@gorev.Tarih.ToString("dd.MM.yyyy")</span>
+                            </div>
+                            
+                            <div class="flex flex-wrap items-center justify-between gap-2 mt-1">
+                                <!-- Etiketler -->
+                                <div class="flex flex-wrap gap-1">
+                                    @if(gorev.GorevEtiketleri != null && gorev.GorevEtiketleri.Any())
+                                    {
+                                        foreach(var ge in gorev.GorevEtiketleri.Take(2))
+                                        {
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded border" style="background-color: @(ge.Etiket.RenkHex)15; color: @ge.Etiket.RenkHex; border-color: @(ge.Etiket.RenkHex)30;">
+                                                @ge.Etiket.Ad
+                                            </span>
+                                        }
+                                    }
+                                </div>
+
+                                <!-- Alt Görev (Checklist) İlerlemesi -->
+                                @if(gorev.AltGorevler != null && gorev.AltGorevler.Any())
+                                {
+                                    var biten = gorev.AltGorevler.Count(a => a.TamamlandiMi);
+                                    var toplam = gorev.AltGorevler.Count();
+                                    <div class="flex items-center gap-1.5 text-xs font-bold text-slate-500" title="Checklist İlerlemesi">
+                                        <i class="bi bi-check2-square text-emerald-500"></i> @biten/@toplam
+                                    </div>
+                                }
+                            </div>
                         </div>
                     }
                 }

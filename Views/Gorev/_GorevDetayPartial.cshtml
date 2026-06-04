@@ -24,6 +24,16 @@
             <span class="text-slate-600 font-semibold bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
                 <i class="bi bi-calendar3"></i> @Model.Tarih.ToString("dd.MM.yyyy")
             </span>
+            
+            @if(Model.GorevEtiketleri != null && Model.GorevEtiketleri.Any())
+            {
+                foreach(var ge in Model.GorevEtiketleri)
+                {
+                    <span class="px-3 py-1.5 rounded-lg font-bold border" style="background-color: @(ge.Etiket.RenkHex)20; color: @ge.Etiket.RenkHex; border-color: @(ge.Etiket.RenkHex)40;">
+                        @ge.Etiket.Ad
+                    </span>
+                }
+            }
         </div>
     </div>
 
@@ -37,6 +47,45 @@
             <p class="text-slate-400 text-sm m-0 italic">Bu görev için detaylı bir açıklama girilmemiş.</p>
         </div>
     }
+
+    <!-- ALT GÖREVLER (CHECKLIST) -->
+    <div class="mt-4">
+        <div class="flex justify-between items-center mb-3">
+            <h6 class="text-[11px] font-black text-slate-400 uppercase tracking-widest m-0">Alt Görevler (Checklist)</h6>
+            @if(Model.AltGorevler != null && Model.AltGorevler.Any())
+            {
+                var biten = Model.AltGorevler.Count(a => a.TamamlandiMi);
+                var toplam = Model.AltGorevler.Count();
+                var yuzde = toplam > 0 ? (biten * 100) / toplam : 0;
+                
+                <span class="text-xs font-bold text-indigo-600">@biten / @toplam (%@yuzde)</span>
+            }
+        </div>
+
+        <div class="space-y-2 mb-3" id="checklistContainer">
+            @if(Model.AltGorevler != null && Model.AltGorevler.Any())
+            {
+                foreach(var altGorev in Model.AltGorevler)
+                {
+                    <div class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-100">
+                        <input type="checkbox" class="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
+                               @(altGorev.TamamlandiMi ? "checked" : "") 
+                               onchange="altGorevDurumDegistir(@altGorev.Id, this.checked)">
+                        <span class="text-sm font-medium @(altGorev.TamamlandiMi ? "text-slate-400 line-through" : "text-slate-700") transition-all">@altGorev.Baslik</span>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="text-slate-400 text-xs italic">Henüz bir alt görev eklenmemiş.</p>
+            }
+        </div>
+
+        <div class="flex gap-2">
+            <input type="text" id="yeniAltGorevBaslik" class="antigravity-input form-control form-control-sm text-sm" placeholder="Yeni alt görev ekle...">
+            <button type="button" onclick="altGorevEkle(@Model.Id)" class="btn btn-sm btn-light text-indigo-600 font-bold px-3">Ekle</button>
+        </div>
+    </div>
 </div>
 
 <div class="modal-footer border-t border-slate-200 p-4 bg-slate-50 rounded-b-2xl flex flex-col sm:flex-row justify-between items-center gap-3">

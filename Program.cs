@@ -67,8 +67,6 @@ app.Use(async (context, next) =>
 });
 
 app.UseRouting();
-// ... (geri kalan kodlar)
-app.UseRouting();
 app.UseSession();
 
 app.UseAuthorization();
@@ -80,5 +78,6 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+app.MapHub<GorevTakipSistemi.Hubs.BildirimHub>("/bildirimHub");
 
 app.Run();

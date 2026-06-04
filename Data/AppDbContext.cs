@@ -19,6 +19,11 @@ namespace GorevTakipSistemi.Data
         public DbSet<EkipDavet> EkipDavetleri { get; set; }
         public DbSet<GorevTamamlama> GorevTamamlamalari { get; set; }
         public DbSet<EkipAktivite> EkipAktiviteleri { get; set; }
+        
+        // YENİ EKLENEN GÖREV DETAY TABLOLARI (CHECKLIST & ETİKETLER)
+        public DbSet<AltGorev> AltGorevler { get; set; }
+        public DbSet<Etiket> Etiketler { get; set; }
+        public DbSet<GorevEtiket> GorevEtiketleri { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

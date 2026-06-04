@@ -2,7 +2,7 @@
     ViewData["Title"] = "Görev Takvimi";
 }
 
-<div class="max-w-7xl mx-auto mt-4 sm:mt-6 px-4 mb-12">
+<div class="hidden md:block max-w-7xl mx-auto mt-4 sm:mt-6 px-4 mb-12">
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 sm:mb-6 gap-4">
         <div>
             <h2 class="text-2xl sm:text-3xl font-black text-slate-800 flex items-center gap-3">
@@ -29,6 +29,16 @@
     <div class="p-3 sm:p-6 bg-white/70 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
         <div id='calendar' class="min-h-[500px] sm:min-h-[600px] overflow-x-auto"></div>
     </div>
+</div>
+
+<!-- Mobile Notice -->
+<div class="md:hidden flex flex-col items-center justify-center text-center p-8 mt-10">
+    <div class="w-20 h-20 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center text-4xl mb-4">
+        <i class="bi bi-pc-display"></i>
+    </div>
+    <h3 class="text-xl font-bold text-slate-800 mb-2">Masaüstü Deneyimi</h3>
+    <p class="text-slate-500">Görev takvimi, en iyi sürükle-bırak deneyimini sunabilmek için sadece bilgisayar üzerinden erişime açıktır.</p>
+    <a asp-action="Index" class="mt-6 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold">Tüm Görevlere Dön</a>
 </div>
 
 <!-- Modal Container -->
