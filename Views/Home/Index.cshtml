@@ -3,39 +3,41 @@
     var kullaniciAdi = Context.Session.GetString("KullaniciAdSoyad");
 }
 
-<div class="max-w-7xl mx-auto mt-10 px-4">
-    <div class="bg-gradient-to-r from-[#345DA7] to-[#4BB4DE] rounded-3xl p-10 sm:p-16 relative overflow-hidden shadow-xl text-white">
-        <div class="absolute -right-10 -top-10 opacity-20">
-            <i class="bi bi-rocket-takeoff text-[15rem]"></i>
+<div class="max-w-7xl mx-auto mt-4 sm:mt-6 px-4">
+    <!-- Hero Section -->
+    <div class="bg-gradient-to-r from-[#345DA7] to-[#4BB4DE] rounded-[2rem] p-6 sm:p-10 relative overflow-hidden shadow-xl text-white">
+        <div class="absolute -right-8 -top-8 opacity-20 hidden sm:block">
+            <i class="bi bi-rocket-takeoff text-[12rem]"></i>
         </div>
         
         <div class="relative z-10 max-w-2xl">
-            <h1 class="text-4xl sm:text-6xl font-black mb-4">Hoş Geldin, @kullaniciAdi! 👋</h1>
-            <p class="text-lg text-indigo-50 mb-8 opacity-90">GörevLab ile projelerini yönet, takımınla organize ol ve zamanını verimli kullan. Bugün harika işler başarmaya hazır mısın?</p>
+            <h1 class="text-3xl sm:text-4xl font-black mb-3">Hoş Geldin, @kullaniciAdi! 👋</h1>
+            <p class="text-sm sm:text-base text-indigo-50 mb-6 opacity-90 leading-relaxed">GörevLab ile projelerini yönet, takımınla organize ol ve zamanını verimli kullan. Bugün harika işler başarmaya hazır mısın?</p>
             
-            <div class="flex flex-col sm:flex-row gap-4">
-                <a asp-controller="Home" asp-action="Dashboard" class="bg-white text-[#345DA7] hover:bg-slate-50 font-bold px-8 py-3.5 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-center no-underline inline-flex items-center justify-center gap-2">
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a asp-controller="Home" asp-action="Dashboard" class="bg-white text-[#345DA7] hover:bg-slate-50 font-bold px-6 py-2.5 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-center text-sm no-underline inline-flex items-center justify-center gap-2">
                     <i class="bi bi-speedometer2"></i> Dashboard'a Git
                 </a>
             </div>
         </div>
     </div>
     
-    <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <a asp-controller="Gorev" asp-action="Index" class="antigravity-card p-6 text-center hover:-translate-y-2 transition-transform block no-underline cursor-pointer group">
-            <div class="w-16 h-16 mx-auto bg-indigo-50 group-hover:bg-indigo-600 group-hover:text-white text-indigo-600 rounded-2xl flex items-center justify-center text-3xl font-bold mb-4 transition-colors">
+    <!-- Action Cards -->
+    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+        <a asp-controller="Gorev" asp-action="Index" class="antigravity-card p-5 text-center hover:-translate-y-1 transition-transform block no-underline cursor-pointer group">
+            <div class="w-12 h-12 mx-auto bg-indigo-50 group-hover:bg-indigo-600 group-hover:text-white text-indigo-600 rounded-2xl flex items-center justify-center text-2xl font-bold mb-3 transition-colors">
                 <i class="bi bi-list-check"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">Görev Yönetimi</h3>
-            <p class="text-sm text-slate-500">Tüm görevlerini tek bir yerden yönet, süreci kolayca takip et.</p>
+            <h3 class="text-base font-bold text-slate-800 mb-1 group-hover:text-indigo-600 transition-colors">Görev Yönetimi</h3>
+            <p class="text-xs text-slate-500">Tüm görevlerini tek bir yerden yönet, süreci kolayca takip et.</p>
         </a>
         
-        <a asp-controller="Ekip" asp-action="Index" class="antigravity-card p-6 text-center hover:-translate-y-2 transition-transform block no-underline cursor-pointer group">
-            <div class="w-16 h-16 mx-auto bg-amber-50 group-hover:bg-amber-500 group-hover:text-white text-amber-600 rounded-2xl flex items-center justify-center text-3xl font-bold mb-4 transition-colors">
+        <a asp-controller="Ekip" asp-action="Index" class="antigravity-card p-5 text-center hover:-translate-y-1 transition-transform block no-underline cursor-pointer group">
+            <div class="w-12 h-12 mx-auto bg-amber-50 group-hover:bg-amber-500 group-hover:text-white text-amber-600 rounded-2xl flex items-center justify-center text-2xl font-bold mb-3 transition-colors">
                 <i class="bi bi-people"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-amber-600 transition-colors">Takım Çalışması</h3>
-            <p class="text-sm text-slate-500">Ekibinle koordineli çalış, anında geri bildirim al.</p>
+            <h3 class="text-base font-bold text-slate-800 mb-1 group-hover:text-amber-600 transition-colors">Takım Çalışması</h3>
+            <p class="text-xs text-slate-500">Ekibinle koordineli çalış, anında geri bildirim al.</p>
         </a>
     </div>
 </div>
