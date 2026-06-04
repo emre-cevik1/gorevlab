@@ -375,5 +375,56 @@ namespace GorevTakipSistemi.Controllers
             
             return PartialView("_GorevDetayPartial", gorev);
         }
+
+        // --- 14. TAKVİM SAYFASI ---
+        public IActionResult Takvim()
+        {
+            return View();
+        }
+
+        // --- 15. TAKVİM İÇİN GÖREVLERİ GETİR (JSON) ---
+        [HttpGet]
+        public JsonResult GetirGorevlerJSON()
+        {
+            int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
+
+            var gorevler = _context.Gorevler
+                                   .Where(g => g.KullaniciId == kullaniciId || g.AtayanKullaniciId == kullaniciId)
+                                   .Select(g => new
+                                   {
+                                       id = g.Id,
+                                       title = g.GorevAdi,
+                                       start = g.Tarih.ToString("yyyy-MM-dd"),
+                                       allDay = true,
+                                       color = !g.DurumAktifMi ? "#10b981" : (g.Oncelik == "Yüksek" ? "#ef4444" : "#4f46e5"), // Tamamlanmış yeşil, Yüksek kırmızı, diğerleri indigo
+                                       url = $"/Gorev/Detay/{g.Id}"
+                                   })
+                                   .ToList();
+
+            return Json(gorevler);
+        }
+
+        // --- 16. TAKVİMDE SÜRÜKLE BIRAK İLE TARİH GÜNCELLEME ---
+        [HttpPost]
+        public IActionResult GuncelleGorevTarih(int id, string yeniTarih)
+        {
+            int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
+            var gorev = _context.Gorevler.FirstOrDefault(g => g.Id == id && (g.KullaniciId == kullaniciId || g.AtayanKullaniciId == kullaniciId));
+            
+            if (gorev == null)
+            {
+                return Json(new { success = false, message = "Görev bulunamadı veya yetkiniz yok." });
+            }
+
+            if (DateTime.TryParse(yeniTarih, out DateTime parsedDate))
+            {
+                // Mevcut saati koru, sadece tarihi güncelle (Eğer saati varsa)
+                gorev.Tarih = new DateTime(parsedDate.Year, parsedDate.Month, parsedDate.Day, gorev.Tarih.Hour, gorev.Tarih.Minute, gorev.Tarih.Second);
+                _context.SaveChanges();
+                return Json(new { success = true, message = "Görev tarihi güncellendi." });
+            }
+
+            return Json(new { success = false, message = "Geçersiz tarih formatı." });
+        }
     }
 }
