@@ -179,15 +179,16 @@
                             </div>
                             <!-- Profile Dropdown -->
                             <div class="relative group hidden md:block">
-                                <button class="flex items-center gap-2 pl-2 pr-4 py-1.5 bg-white border border-slate-200 text-sm font-bold text-slate-700 hover:border-indigo-300 rounded-full transition-all duration-300 shadow-sm hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+                                <a asp-controller="Home" asp-action="Profil" class="flex items-center gap-2 pl-2 pr-4 py-1.5 bg-white border border-slate-200 text-sm font-bold text-slate-700 hover:border-indigo-300 rounded-full transition-all duration-300 shadow-sm hover:shadow-lg hover:-translate-y-1 cursor-pointer no-underline">
                                     <div class="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-inner">
                                         @basHarfler
                                     </div>
                                     <span>@adSoyad</span>
                                     <i class="bi bi-chevron-down text-[10px] ml-1 text-slate-400 group-hover:text-indigo-600 transition-colors"></i>
-                                </button>
+                                </a>
                                 
-                                <div class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden flex flex-col">
+                                <div class="absolute right-0 top-full pt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                                    <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden flex flex-col transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                                     <a asp-controller="Home" asp-action="Profil" class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-3 no-underline border-b border-slate-50">
                                         <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="bi bi-person"></i></div> Profilim
                                     </a>
@@ -200,6 +201,7 @@
                                     <a asp-controller="Auth" asp-action="Logout" class="px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3 no-underline">
                                         <div class="w-8 h-8 rounded-xl bg-red-100 text-red-600 flex items-center justify-center"><i class="fa-solid fa-power-off"></i></div> Çıkış Yap
                                     </a>
+                                    </div>
                                 </div>
                             </div>
 
