@@ -25,8 +25,17 @@
         </div>
     </div>
 
-    <div class="antigravity-card p-6 bg-white rounded-3xl shadow-sm border border-slate-200">
+    <!-- antigravity-card hover animasyonu sürükle-bırak pozisyonunu bozduğu için düz tailwind class'ları kullanıyoruz -->
+    <div class="p-6 bg-white/70 backdrop-blur-xl rounded-3xl shadow-sm border border-slate-200">
         <div id='calendar' class="min-h-[600px]"></div>
+    </div>
+</div>
+
+<!-- Modal Container -->
+<div class="modal fade" id="gorevDetayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div id="modalIcerik" class="modal-content rounded-3xl border-none shadow-2xl overflow-hidden">
+        </div>
     </div>
 </div>
 
@@ -36,6 +45,18 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales/tr.js'></script>
 
     <script>
+        // Modal açma fonksiyonu
+        function gorevDetayAc(id) {
+            $("#modalIcerik").html('<div class="p-10 text-center"><div class="spinner-border text-indigo-500" role="status"></div><p class="mt-3 text-slate-500 font-medium">Görev detayları yükleniyor...</p></div>');
+            
+            var modalEl = document.getElementById('gorevDetayModal');
+            var myModal = bootstrap.Modal.getInstance(modalEl);
+            if (!myModal) { myModal = new bootstrap.Modal(modalEl); }
+            myModal.show();
+            
+            $("#modalIcerik").load("/Gorev/DetayGetir/" + id);
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
             
@@ -52,7 +73,9 @@
                     today: 'Bugün',
                     month: 'Ay',
                     week: 'Hafta',
-                    day: 'Gün'
+                    day: 'Gün',
+                    prev: 'Geri',
+                    next: 'İleri'
                 },
                 events: '/Gorev/GetirGorevlerJSON',
                 editable: true,       // Sürükle-bırak izni
@@ -86,12 +109,10 @@
                     });
                 },
                 
-                // Göreve tıklandığında detay sayfasına git
+                // Göreve tıklandığında detay modalını aç
                 eventClick: function(info) {
                     info.jsEvent.preventDefault(); // Varsayılanı durdur
-                    if (info.event.url) {
-                        window.location.href = info.event.url;
-                    }
+                    gorevDetayAc(info.event.id);
                 }
             });
             
