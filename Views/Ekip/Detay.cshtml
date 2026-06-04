@@ -107,6 +107,37 @@
                                     </div>
                                 </div>
                                 
+                                <div class="mt-3 flex items-center justify-between">
+                                    <!-- Etiketler -->
+                                    <div class="flex flex-wrap gap-1">
+                                        @if(g.GorevEtiketleri != null && g.GorevEtiketleri.Any())
+                                        {
+                                            foreach(var ge in g.GorevEtiketleri.Take(2))
+                                            {
+                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded border" style="background-color: @(ge.Etiket.RenkHex)15; color: @ge.Etiket.RenkHex; border-color: @(ge.Etiket.RenkHex)30;">
+                                                    @ge.Etiket.Ad
+                                                </span>
+                                            }
+                                            if(g.GorevEtiketleri.Count > 2)
+                                            {
+                                                <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-1 py-0.5 rounded border border-slate-200">
+                                                    +@(g.GorevEtiketleri.Count - 2)
+                                                </span>
+                                            }
+                                        }
+                                    </div>
+                                    
+                                    <!-- Alt Görev (Checklist) İlerlemesi -->
+                                    @if(g.AltGorevler != null && g.AltGorevler.Any())
+                                    {
+                                        var biten = g.AltGorevler.Count(a => a.TamamlandiMi);
+                                        var toplam = g.AltGorevler.Count();
+                                        <div class="flex items-center gap-1.5 text-xs font-bold text-slate-500" title="Checklist İlerlemesi">
+                                            <i class="bi bi-check2-square text-indigo-500"></i> @biten/@toplam
+                                        </div>
+                                    }
+                                </div>
+                                
                                 <div class="mt-3 pt-3 border-t border-slate-200/60 grid grid-cols-2 gap-2">
                                     <div>
                                         <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">✅ Bitirenler (@tamamlayanlar.Count)</p>

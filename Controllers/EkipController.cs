@@ -109,6 +109,8 @@ namespace GorevTakipSistemi.Controllers
             var ekip = _context.Ekipler
                 .Include(e => e.Uyeler).ThenInclude(u => u.Kullanici)
                 .Include(e => e.Gorevler).ThenInclude(g => g.Tamamlamalar).ThenInclude(t => t.Kullanici)
+                .Include(e => e.Gorevler).ThenInclude(g => g.AltGorevler)
+                .Include(e => e.Gorevler).ThenInclude(g => g.GorevEtiketleri).ThenInclude(ge => ge.Etiket)
                 .Include(e => e.Davetler).ThenInclude(d => d.Alici)
                 .FirstOrDefault(e => e.Id == id);
 
