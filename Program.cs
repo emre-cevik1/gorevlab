@@ -24,13 +24,23 @@ builder.Services.AddSession(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
+// SignalR Servisini Ekle
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 // 🔥 OTOMATİK VERİTABANI GÜNCELLEME (CI/CD İÇİN ŞART)
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    try 
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Veritabanı migration hatası: " + ex.Message);
+    }
 }
 
 // Configure the HTTP request pipeline.
