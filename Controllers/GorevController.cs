@@ -201,6 +201,14 @@ namespace GorevTakipSistemi.Controllers
 
             int me = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
             
+            // Limit Kontrolü: Kişisel görev sayısı en fazla 50 olabilir
+            int currentTaskCount = _context.Gorevler.Count(g => g.KullaniciId == me && g.EkipId == null);
+            if (currentTaskCount >= 50)
+            {
+                TempData["Error"] = "Limit Aşıldı: En fazla 50 kişisel görev oluşturabilirsiniz.";
+                return View(gorev);
+            }
+
             // Sadece kendine atanıyor
             gorev.KullaniciId = me;
             gorev.AtayanKullaniciId = null;

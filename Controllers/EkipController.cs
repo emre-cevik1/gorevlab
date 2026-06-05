@@ -148,7 +148,7 @@ namespace GorevTakipSistemi.Controllers
             if (!liderMi) return Json(new { success = false, message = "Sadece ekip lideri görev atayabilir!" });
 
             var aktifGorevSayisi = _context.Gorevler.Count(g => g.EkipId == ekipId && g.DurumAktifMi);
-            if (aktifGorevSayisi >= 10) return Json(new { success = false, message = "Bu ekibe en fazla 10 adet aktif görev eklenebilir!" });
+            if (aktifGorevSayisi >= 50) return Json(new { success = false, message = "Bu ekibe en fazla 50 adet aktif görev eklenebilir!" });
 
             var yeniGorev = new Gorev
             {

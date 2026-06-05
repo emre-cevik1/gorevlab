@@ -465,11 +465,27 @@
         }
 
         function tumunuSil() {
-            if(confirm("Tüm bildirimleri silmek istediğine emin misin?")) {
-                $.post('/Bildirim/TumunuSil', function() {
-                    bildirimleriGetir();
-                });
-            }
+            Swal.fire({
+                title: 'Emin misin?',
+                text: "Tüm bildirimleri kalıcı olarak silmek istediğine emin misin?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Evet, Hepsini Sil',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/Bildirim/TumunuSil', function() {
+                        bildirimleriGetir();
+                        Swal.fire(
+                          'Silindi!',
+                          'Tüm bildirimlerin silindi.',
+                          'success'
+                        )
+                    });
+                }
+            })
         }
     </script>
 
