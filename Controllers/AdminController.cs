@@ -646,5 +646,13 @@ namespace GorevTakipSistemi.Controllers
 
             return Json(new { success = true, message = "Bildirim başarıyla fırlatıldı! 🚀" });
         }
+        [HttpGet("/Admin/AcilDestekSil")]
+        public async Task<IActionResult> AcilDestekSil()
+        {
+            var tumTalepler = _context.DestekMesajlari.ToList();
+            _context.DestekMesajlari.RemoveRange(tumTalepler);
+            await _context.SaveChangesAsync();
+            return Content($"Başarıyla {tumTalepler.Count} adet spam destek talebi silindi!");
+        }
     }
 }
