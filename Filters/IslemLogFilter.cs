@@ -7,33 +7,50 @@ using GorevTakipSistemi.Models;
 
 namespace GorevTakipSistemi.Filters
 {
+    /// <summary>
+    /// Basarili POST islemlerini otomatik olarak sistem loguna kaydeden aksiyon filtresi.
+    /// Denetleyici ve aksiyon bilgileriyle birlikte kullanici adi ve IP adresi gibi detaylari loglar.
+    /// </summary>
     public class IslemLogFilter : IActionFilter
     {
+        /// <summary>
+        /// Veritabani baglam nesnesi. Log kayitlarinin veritabanina yazilmasi icin kullanilir.
+        /// </summary>
         private readonly AppDbContext _context;
 
+        /// <summary>
+        /// IslemLogFilter sinifinin yapici metodu.
+        /// </summary>
+        /// <param name="context">Bagimlilik enjeksiyonu ile saglanan veritabani baglam nesnesi.</param>
         public IslemLogFilter(AppDbContext context)
         {
             _context = context;
         }
 
+        /// <summary>
+        /// Aksiyon calistirilmadan once tetiklenir. Bu filtrede islem oncesi ek bir mantik uygulanmaz.
+        /// </summary>
+        /// <param name="context">Aksiyon calistirma baglami.</param>
         public void OnActionExecuting(ActionExecutingContext context)
         {
-            // İşlem öncesi çalışır
+            // Islem oncesi ek bir islem yapilmamaktadir
         }
 
+        /// <summary>
+        /// Aksiyon calistirildiktan sonra tetiklenir.
+        /// Basarili POST isteklerini kullanici bilgileriyle birlikte veritabanina loglar.
+        /// </summary>
+        /// <param name="context">Aksiyon calistirma sonuc baglami.</param>
         public void OnActionExecuted(ActionExecutedContext context)
         {
-            // Sadece POST işlemleri genelde sistemde değişiklik yapar (Kayıt, Silme, Güncelleme)
+            // Yalnizca veri degisikligi yapan POST istekleri loglanir
             var requestMethod = context.HttpContext.Request.Method;
             
-            // Eğer sayfa başarıyla çalıştıysa ve POST işlemiyse kaydet
+            // Istek basarili ve POST metodu ise log kaydini olusturur
             if (requestMethod == "POST" && context.Exception == null)
             {
                 var controllerName = context.RouteData.Values["controller"]?.ToString();
                 var actionName = context.RouteData.Values["action"]?.ToString();
-                
-                // Önceden manuel loglanan bazı kritik şeyleri çiftlememek için filtreleyebiliriz
-                // Veya her şeyi loglasın gitsin.
                 
                 string kullaniciAdi = context.HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Misafir / Bilinmeyen";
                 string islemAdeti = $"{controllerName} modülünde {actionName} işlemi yapıldı.";

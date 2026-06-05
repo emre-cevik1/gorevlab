@@ -18,26 +18,38 @@ namespace GorevTakipSistemi.Controllers
         private readonly AppDbContext _context;
         private readonly IHubContext<BildirimHub> _hubContext;
 
+        /// <summary>
+        /// EkipController sinifinin yapilandirici metodu.
+        /// Veritabani baglami ve SignalR hub baglamini bagimlilik enjeksiyonu ile alir.
+        /// </summary>
+        /// <param name="context">Uygulama veritabani baglami.</param>
+        /// <param name="hubContext">Anlik bildirim gondermek icin kullanilan SignalR hub baglami.</param>
         public EkipController(AppDbContext context, IHubContext<BildirimHub> hubContext)
         {
             _context = context;
             _hubContext = hubContext;
         }
 
-        // --- KULLANICININ EKİPLERİNİ VE DAVETLERİNİ LİSTELE ---
+        // ===== EKIP LISTELEME =====
+
+        /// <summary>
+        /// Kullanicinin uye oldugu veya kurdugu ekipleri ve bekleyen davetlerini listeler.
+        /// Ekipler kurulusuna gore azalan sirada, davetler ise bekleyen durumda filtrelenerek getirilir.
+        /// </summary>
+        /// <returns>Ekip listesi ve davetleri iceren gorunum.</returns>
         public IActionResult Index()
         {
             var userId = HttpContext.Session.GetInt32("KullaniciId");
             if (userId == null) return RedirectToAction("Login", "Auth");
 
-            // Mevcut Ekiplerim
+            // Kullanicinin kurucusu veya uyesi oldugu ekipleri iliskili uye verileriyle birlikte getir
             var ekipler = _context.Ekipler
                 .Include(e => e.Uyeler)
                 .Where(e => e.KurucuId == userId || e.Uyeler.Any(u => u.KullaniciId == userId))
                 .OrderByDescending(e => e.KurulusTarihi)
                 .ToList();
 
-            // Gelen Davetlerim
+            // Kullaniciya gelen ve henuz beklemede olan ekip davetlerini getir
             var davetler = _context.EkipDavetleri
                 .Include(d => d.Ekip)
                 .Include(d => d.Gonderen)
@@ -49,7 +61,13 @@ namespace GorevTakipSistemi.Controllers
             return View(ekipler);
         }
 
-        // --- YENİ EKİP OLUŞTURMA SAYFASI (GET) ---
+        // ===== EKIP OLUSTURMA =====
+
+        /// <summary>
+        /// Yeni ekip olusturma formunu goruntuleyen GET metodu.
+        /// Oturum acilmamissa giris sayfasina yonlendirir.
+        /// </summary>
+        /// <returns>Ekip olusturma formu gorunumu.</returns>
         public IActionResult Olustur()
         {
             var userId = HttpContext.Session.GetInt32("KullaniciId");
@@ -58,7 +76,13 @@ namespace GorevTakipSistemi.Controllers
             return View();
         }
 
-        // --- YENİ EKİP OLUŞTURMA İŞLEMİ (POST) ---
+        /// <summary>
+        /// Yeni ekip olusturma islemini gerceklestiren POST metodu.
+        /// Ekip adi zorunludur. Her kullanici en fazla 5 ekip olusturabilir.
+        /// Ekip olusturuldugunda kurucu otomatik olarak Lider rolunde eklenir.
+        /// </summary>
+        /// <param name="model">Olusturulacak ekip bilgilerini iceren model.</param>
+        /// <returns>Basarili ise ekip listesine yonlendirir, basarisiz ise formu hata mesajiyla dondurur.</returns>
         [HttpPost]
         public async Task<IActionResult> Olustur(Ekip model)
         {
@@ -71,6 +95,7 @@ namespace GorevTakipSistemi.Controllers
                 return View(model);
             }
 
+            // Ekip limiti kontrolu: Her kullanici en fazla 5 ekip olusturabilir
             var mevcutEkipSayisi = _context.Ekipler.Count(e => e.KurucuId == userId.Value);
             if (mevcutEkipSayisi >= 5)
             {
@@ -87,6 +112,7 @@ namespace GorevTakipSistemi.Controllers
             _context.Ekipler.Add(model);
             await _context.SaveChangesAsync(); 
 
+            // Kurucuyu ekibin ilk uyesi olarak Lider rolunde kaydet
             var kurucuUye = new EkipUyesi
             {
                 EkipId = model.Id,
@@ -101,12 +127,21 @@ namespace GorevTakipSistemi.Controllers
             return RedirectToAction("Index");
         }
 
-        // --- EKİP DETAYLARI (KARARGAH) ---
+        // ===== EKIP DETAY =====
+
+        /// <summary>
+        /// Ekip detay sayfasini (karargah) goruntuleyen metot.
+        /// Ekip uyeleri, gorevler, alt gorevler, etiketler, davetler ve aktivite loglarini yukler.
+        /// Yalnizca ekip uyesi olan kullanicilar bu sayfaya erisebilir.
+        /// </summary>
+        /// <param name="id">Detaylari goruntulenmek istenen ekibin kimlik numarasi.</param>
+        /// <returns>Ekip detay gorunumu veya yetkisiz erisimde liste sayfasina yonlendirme.</returns>
         public IActionResult Detay(int id)
         {
             var userId = HttpContext.Session.GetInt32("KullaniciId");
             if (userId == null) return RedirectToAction("Login", "Auth");
 
+            // Ekibi tum iliskili verileriyle birlikte yukle
             var ekip = _context.Ekipler
                 .Include(e => e.Uyeler).ThenInclude(u => u.Kullanici)
                 .Include(e => e.Gorevler).ThenInclude(g => g.Tamamlamalar).ThenInclude(t => t.Kullanici)
@@ -117,6 +152,7 @@ namespace GorevTakipSistemi.Controllers
 
             if (ekip == null) return NotFound();
 
+            // Yetki kontrolu: Istekte bulunan kullanicinin ekip uyesi olup olmadigini dogrula
             if (!ekip.Uyeler.Any(u => u.KullaniciId == userId))
             {
                 TempData["Error"] = "Bu ekibin karargahına girme yetkiniz yok!";
@@ -126,6 +162,7 @@ namespace GorevTakipSistemi.Controllers
             ViewBag.CurrentUserId = userId;
             ViewBag.IsLider = ekip.Uyeler.Any(u => u.KullaniciId == userId && u.Rol == "Lider");
 
+            // Ekibe ait son 20 aktivite logunu tarih sirasina gore getir
             ViewBag.Aktiviteler = _context.EkipAktiviteleri
                                           .Include(a => a.Kullanici)
                                           .Where(a => a.EkipId == id)
@@ -136,17 +173,30 @@ namespace GorevTakipSistemi.Controllers
             return View(ekip);
         }
 
-        // --- EKİBE GÖREV EKLEME ---
+        // ===== EKIP GOREV EKLEME =====
+
+        /// <summary>
+        /// Ekibe yeni gorev ekleyen POST metodu. Yalnizca ekip lideri bu islemi yapabilir.
+        /// Gorev eklendikten sonra alt gorevler kaydedilir, aktivite logu yazilir,
+        /// diger ekip uyelerine veritabani ve SignalR bildirimi gonderilir.
+        /// </summary>
+        /// <param name="ekipId">Gorevin eklenecegi ekibin kimlik numarasi.</param>
+        /// <param name="gorevAdi">Yeni gorevin adi.</param>
+        /// <param name="aciklama">Gorevin aciklamasi.</param>
+        /// <param name="tarih">Gorevin hedef tarihi.</param>
+        /// <param name="altGorevler">Goreve eklenecek alt gorev basliklarinin listesi.</param>
+        /// <returns>Islem sonucunu iceren JSON yaniti.</returns>
         [HttpPost]
         public async Task<IActionResult> EkipGorevEkle(int ekipId, string gorevAdi, string aciklama, DateTime tarih, List<string> altGorevler)
         {
             var userId = HttpContext.Session.GetInt32("KullaniciId");
             if (userId == null) return Json(new { success = false, message = "Oturum kapalı." });
 
+            // Yetki kontrolu: Islemi yapan kullanicinin ekip lideri olup olmadigini dogrula
             var liderMi = _context.EkipUyeleri.Any(u => u.EkipId == ekipId && u.KullaniciId == userId && u.Rol == "Lider");
             if (!liderMi) return Json(new { success = false, message = "Sadece ekip lideri görev atayabilir!" });
 
-            // Limit Kontrolü: Toplam görev sayısı (tamamlanmış dahil) maksimum 20 olabilir
+            // Ekip gorev limiti kontrolu: Bir ekipte en fazla 20 gorev bulunabilir
             var toplamGorevSayisi = _context.Gorevler.Count(g => g.EkipId == ekipId);
             if (toplamGorevSayisi >= 20) return Json(new { success = false, message = "Sistemde en fazla 20 adet görev barındırabilirsiniz. Lütfen yer açmak için eski veya tamamlanmış görevleri silin!" });
 
@@ -165,7 +215,7 @@ namespace GorevTakipSistemi.Controllers
             _context.Gorevler.Add(yeniGorev);
             await _context.SaveChangesAsync();
 
-            // Alt Görevleri Kaydet
+            // Alt gorevleri ana goreve baglayarak veritabanina kaydet
             if (altGorevler != null && altGorevler.Any())
             {
                 foreach (var baslik in altGorevler)
@@ -183,7 +233,7 @@ namespace GorevTakipSistemi.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            // AKTİVİTE LOGLAMA
+            // Ekip aktivite loguna gorev olusturma kaydini ekle
             _context.EkipAktiviteleri.Add(new EkipAktivite {
                 EkipId = ekipId,
                 KullaniciId = userId.Value,
@@ -193,7 +243,7 @@ namespace GorevTakipSistemi.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Ekipteki diğer üyelere bildirim gönder
+            // Ekipteki diger uyelere bildirim gonder (gorevi olusturan haric)
             var ekip = await _context.Ekipler.FindAsync(ekipId);
             var digerUyeler = await _context.EkipUyeleri
                 .Where(u => u.EkipId == ekipId && u.KullaniciId != userId.Value)
@@ -206,19 +256,20 @@ namespace GorevTakipSistemi.Controllers
             {
                 foreach (var uyeId in digerUyeler)
                 {
+                    // Her ekip uyesi icin veritabani bildirimi olustur
                     _context.Bildirimler.Add(new Bildirim {
                         KullaniciId = uyeId,
                         Mesaj = $"{adSoyad}, '{ekip.Ad}' ekibine yeni bir görev ekledi: {gorevAdi}",
                         Url = $"/Ekip/Detay/{ekipId}"
                     });
                     
-                    // SignalR ile Anlık Bildirim
+                    // SignalR uzerinden her ekip uyesine anlik bildirim gonder
                     await _hubContext.Clients.Group(uyeId.ToString()).SendAsync("YeniBildirim", "Yeni Ekip Görevi!", $"{adSoyad}, '{ekip.Ad}' ekibine yeni bir görev ekledi: {gorevAdi}", "info", $"/Ekip/Detay/{ekipId}");
                 }
                 await _context.SaveChangesAsync();
             }
 
-            // LOG SİSTEMİ
+            // Sistem loglama: Ekip gorevi olusturma islemini kayit altina al
             _context.SistemLoglari.Add(new SistemLog {
                 KullaniciAdi = adSoyad,
                 YapilanIslem = $"Yeni ekip görevi oluşturuldu ({ekip?.Ad}): {gorevAdi}",
@@ -227,10 +278,19 @@ namespace GorevTakipSistemi.Controllers
             });
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true, message = "Ekip görevi başarıyla oluşturuldu! 🎯" });
+            return Json(new { success = true, message = "Ekip görevi başarıyla oluşturuldu!" });
         }
 
-        // --- CANLI KULLANICI ARAMA ---
+        // ===== KULLANICI ARAMA =====
+
+        /// <summary>
+        /// Ekibe davet edilecek kullanicilari canli olarak arayan GET metodu.
+        /// Mevcut ekip uyeleri ve bekleyen davetleri olan kullanicilar sonuclardan haric tutulur.
+        /// Yasaklanmis kullanicilar da sonuclara dahil edilmez. En fazla 5 sonuc dondurulur.
+        /// </summary>
+        /// <param name="q">Arama metni (kullanici adi veya e-posta).</param>
+        /// <param name="ekipId">Aramanin yapildigi ekibin kimlik numarasi.</param>
+        /// <returns>Eslesen kullanicilari iceren JSON yaniti.</returns>
         [HttpGet]
         public IActionResult KullaniciAra(string q, int ekipId)
         {
@@ -238,6 +298,7 @@ namespace GorevTakipSistemi.Controllers
 
             var aranan = q.ToLower();
 
+            // Mevcut ekip uyeleri ve bekleyen davet alicilari haric tutulacak kimlik listesi
             var ekipUyeIds = _context.EkipUyeleri.Where(u => u.EkipId == ekipId).Select(u => u.KullaniciId).ToList();
             var bekleyenDavetIds = _context.EkipDavetleri.Where(d => d.EkipId == ekipId && d.Durum == "Bekliyor").Select(d => d.AliciId).ToList();
             
@@ -257,13 +318,23 @@ namespace GorevTakipSistemi.Controllers
             return Json(kullanicilar);
         }
 
-        // --- DAVET GÖNDERME ---
+        // ===== DAVET YONETIMI =====
+
+        /// <summary>
+        /// Belirtilen kullaniciya ekip daveti gonderen POST metodu.
+        /// Yalnizca ekip lideri davet gonderebilir.
+        /// Davet gonderildikten sonra aliciya veritabani ve SignalR bildirimi gonderilir.
+        /// </summary>
+        /// <param name="ekipId">Davetin gonderilecegi ekibin kimlik numarasi.</param>
+        /// <param name="aliciId">Davet edilecek kullanicinin kimlik numarasi.</param>
+        /// <returns>Islem sonucunu iceren JSON yaniti.</returns>
         [HttpPost]
         public async Task<IActionResult> DavetGonder(int ekipId, int aliciId)
         {
             var gonderenId = HttpContext.Session.GetInt32("KullaniciId");
             if (gonderenId == null) return Json(new { success = false, message = "Oturum zaman aşımına uğradı." });
 
+            // Yetki kontrolu: Yalnizca ekip lideri davet gonderebilir
             var yetkiKontrol = _context.EkipUyeleri.Any(u => u.EkipId == ekipId && u.KullaniciId == gonderenId && u.Rol == "Lider");
             if (!yetkiKontrol) return Json(new { success = false, message = "Sadece ekip liderleri davet gönderebilir!" });
 
@@ -278,6 +349,7 @@ namespace GorevTakipSistemi.Controllers
 
             _context.EkipDavetleri.Add(davet);
 
+            // Aliciya ekip daveti bildirimi olustur
             var gonderen = await _context.Kullanicilar.FindAsync(gonderenId.Value);
             var ekip = await _context.Ekipler.FindAsync(ekipId);
             string gonderenAdi = gonderen?.Ad ?? "Biri";
@@ -290,13 +362,18 @@ namespace GorevTakipSistemi.Controllers
 
             await _context.SaveChangesAsync();
 
-            // SignalR ile Anlık Davet Bildirimi
+            // SignalR uzerinden aliciya anlik davet bildirimi gonder
             await _hubContext.Clients.Group(aliciId.ToString()).SendAsync("YeniBildirim", "Yeni Ekip Daveti!", $"{gonderenAdi}, seni '{ekip?.Ad}' ekibine davet etti.", "info", "/Ekip/Index");
 
-            return Json(new { success = true, message = "Davet füzeleri başarıyla ateşlendi! 🚀" });
+            return Json(new { success = true, message = "Davet başarıyla gönderildi!" });
         }
 
-        // --- DAVETİ KABUL ET ---
+        /// <summary>
+        /// Gelen ekip davetini kabul eden POST metodu.
+        /// Kabul edilen davetle kullanici, ekibe Uye rolunde eklenir ve davet kaydi silinir.
+        /// </summary>
+        /// <param name="davetId">Kabul edilecek davetin kimlik numarasi.</param>
+        /// <returns>Islem sonucunu iceren JSON yaniti.</returns>
         [HttpPost]
         public async Task<IActionResult> DavetKabul(int davetId)
         {
@@ -309,6 +386,7 @@ namespace GorevTakipSistemi.Controllers
             
             if (davet == null) return Json(new { success = false, message = "Davet bulunamadı veya zaten işlenmiş!" });
 
+            // Kabul eden kullaniciyi ekibe Uye rolunde ekle
             var yeniUye = new EkipUyesi
             {
                 EkipId = davet.EkipId,
@@ -318,13 +396,19 @@ namespace GorevTakipSistemi.Controllers
             };
             _context.EkipUyeleri.Add(yeniUye);
 
+            // Islenen davet kaydini veritabanindan kaldir
             _context.EkipDavetleri.Remove(davet);
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true, message = $"{davet.Ekip.Ad} ekibine başarıyla katıldın! Hoş geldin! 🎉" });
+            return Json(new { success = true, message = $"{davet.Ekip.Ad} ekibine başarıyla katıldınız! Hoş geldiniz!" });
         }
 
-        // --- DAVETİ REDDET ---
+        /// <summary>
+        /// Gelen ekip davetini reddeden POST metodu.
+        /// Reddedilen davet kaydi veritabanindan kaldirilir.
+        /// </summary>
+        /// <param name="davetId">Reddedilecek davetin kimlik numarasi.</param>
+        /// <returns>Islem sonucunu iceren JSON yaniti.</returns>
         [HttpPost]
         public async Task<IActionResult> DavetRed(int davetId)
         {
@@ -341,7 +425,17 @@ namespace GorevTakipSistemi.Controllers
 
             return Json(new { success = true, message = "Davet reddedildi." });
         }
-        // --- 1. GÖREVİ TAMAMLA (HERKES YAPABİLİR) ---
+
+        // ===== EKIP GOREV DURUM YONETIMI =====
+
+        /// <summary>
+        /// Ekip gorevini tamamlama islemini gerceklestiren POST metodu.
+        /// Her ekip uyesi kendi tamamlama kaydini olusturur. Eger tum hedef uyeler gorevi
+        /// tamamlamissa, gorev otomatik olarak pasif (tamamlanmis) duruma gecirilir.
+        /// Lider haricindeki uyeler hedef olarak belirlenir; uye yoksa lider hedef olur.
+        /// </summary>
+        /// <param name="gorevId">Tamamlanacak gorevin kimlik numarasi.</param>
+        /// <returns>Islem sonucunu iceren JSON yaniti.</returns>
         [HttpPost]
         public async Task<IActionResult> GorevDurumGuncelle(int gorevId)
         {
@@ -351,23 +445,24 @@ namespace GorevTakipSistemi.Controllers
             var gorev = await _context.Gorevler.FindAsync(gorevId);
             if (gorev == null) return Json(new { success = false, message = "Görev bulunamadı!" });
 
+            // Kullanicinin bu gorev icin tamamlama kaydi olup olmadigini kontrol et
             var tamamlama = await _context.GorevTamamlamalari.FirstOrDefaultAsync(t => t.GorevId == gorevId && t.KullaniciId == userId.Value);
             if (tamamlama == null)
             {
                 _context.GorevTamamlamalari.Add(new GorevTamamlama { GorevId = gorevId, KullaniciId = userId.Value });
                 await _context.SaveChangesAsync();
 
-                // Görevi oluşturana bildirim gönder
+                // Gorevi olusturan kullaniciya tamamlama bildirimi gonder
                 if (gorev.KullaniciId != userId.Value)
                 {
                     string adSoyad = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Bir ekip arkadaşın";
                     _context.Bildirimler.Add(new Bildirim {
                         KullaniciId = gorev.KullaniciId,
-                        Mesaj = $"{adSoyad}, '{gorev.GorevAdi}' adlı ekip görevini tamamladı! ✅",
+                        Mesaj = $"{adSoyad}, '{gorev.GorevAdi}' adlı ekip görevini tamamladı!",
                         Url = $"/Ekip/Detay/{gorev.EkipId}"
                     });
                     
-                    // LOG SİSTEMİ
+                    // Sistem loglama: Ekip gorev tamamlama islemini kayit altina al
                     _context.SistemLoglari.Add(new SistemLog {
                         KullaniciAdi = adSoyad,
                         YapilanIslem = $"Ekip görevini tamamladı: {gorev.GorevAdi}",
@@ -379,31 +474,42 @@ namespace GorevTakipSistemi.Controllers
                 }
             }
 
-            // Tüm beklenenler tamamladı mı kontrolü
+            // Tum hedef uyelerin gorevi tamamlayip tamamlamadigini degerlendir
             var tamamlamalar = await _context.GorevTamamlamalari.Where(t => t.GorevId == gorevId).Select(t => t.KullaniciId).ToListAsync();
             var ekipUyeleri = await _context.EkipUyeleri.Where(u => u.EkipId == gorev.EkipId).ToListAsync();
             var uyelerHaricLider = ekipUyeleri.Where(u => u.Rol != "Lider").ToList();
+
+            // Hedef uye listesini belirle: Lider haricindeki uyeler onceliklidir, yoksa lider hedef olur
             var hedefUyeler = uyelerHaricLider.Any() ? uyelerHaricLider : ekipUyeleri.Where(u => u.Rol == "Lider").ToList();
             
             var bekleyenKalmadi = !hedefUyeler.Any(u => !tamamlamalar.Contains(u.KullaniciId));
             
+            // Tum hedef uyeler tamamladiysa gorevi otomatik olarak pasif duruma gecir
             if (bekleyenKalmadi && gorev.DurumAktifMi)
             {
                 gorev.DurumAktifMi = false;
                 await _context.SaveChangesAsync();
             }
 
-            return Json(new { success = true, message = "Görev başarıyla tamamlandı! ✅" });
+            return Json(new { success = true, message = "Görev başarıyla tamamlandı!" });
         }
 
-        // --- 2. ÜYE ŞUTLAMA (SADECE LİDER) ---
+        // ===== UYE YONETIMI =====
+
+        /// <summary>
+        /// Belirtilen uyeyi ekipten cikaran POST metodu. Yalnizca ekip lideri bu islemi yapabilir.
+        /// Lider kendini ekipten cikaramaz.
+        /// </summary>
+        /// <param name="ekipId">Uyenin cikarilacagi ekibin kimlik numarasi.</param>
+        /// <param name="uyeId">Ekipten cikarilacak uyenin kimlik numarasi.</param>
+        /// <returns>Islem sonucunu iceren JSON yaniti.</returns>
         [HttpPost]
         public async Task<IActionResult> UyeCikar(int ekipId, int uyeId)
         {
             var liderId = HttpContext.Session.GetInt32("KullaniciId");
             if (liderId == null) return Json(new { success = false });
 
-            // İşlemi yapan kişi gerçekten lider mi?
+            // Yetki kontrolu: Islemi yapan kullanicinin ekip lideri olup olmadigini dogrula
             var liderMi = await _context.EkipUyeleri.AnyAsync(u => u.EkipId == ekipId && u.KullaniciId == liderId && u.Rol == "Lider");
             if (!liderMi) return Json(new { success = false, message = "Bu işlem için Lider yetkisi gerekiyor!" });
 
@@ -414,19 +520,27 @@ namespace GorevTakipSistemi.Controllers
             {
                 _context.EkipUyeleri.Remove(uye);
                 await _context.SaveChangesAsync();
-                return Json(new { success = true, message = "Üye ekipten şutlandı! 🥾" });
+                return Json(new { success = true, message = "Üye ekipten çıkarıldı." });
             }
             return Json(new { success = false, message = "Üye bulunamadı." });
         }
 
-        // --- 3. EKİBİ TAMAMEN DAĞITMA (SADECE LİDER) ---
+        // ===== EKIP SILME =====
+
+        /// <summary>
+        /// Ekibi tum iliskili verileriyle birlikte kalici olarak silen POST metodu.
+        /// Yalnizca ekip kurucusu bu islemi yapabilir.
+        /// Silme sirasi: Gorevler, davetler, uyeler ve son olarak ekip kaydi.
+        /// </summary>
+        /// <param name="ekipId">Silinecek ekibin kimlik numarasi.</param>
+        /// <returns>Islem sonucunu iceren JSON yaniti.</returns>
         [HttpPost]
         public async Task<IActionResult> EkipSil(int ekipId)
         {
             var liderId = HttpContext.Session.GetInt32("KullaniciId");
             if (liderId == null) return Json(new { success = false });
 
-            // SQL Patlamaması için her şeyi sırayla siliyoruz (Görevler, Davetler, Üyeler, Ekip)
+            // Ekibi iliskili tum verileriyle birlikte yukle ve kurucu yetkisini dogrula
             var ekip = await _context.Ekipler
                 .Include(e => e.Uyeler)
                 .Include(e => e.Gorevler)
@@ -435,6 +549,7 @@ namespace GorevTakipSistemi.Controllers
 
             if (ekip == null) return Json(new { success = false, message = "Silme yetkiniz yok!" });
 
+            // Iliskisel butunlugu korumak icin bagli verileri sirasina gore sil
             _context.EkipUyeleri.RemoveRange(ekip.Uyeler);
             _context.Gorevler.RemoveRange(ekip.Gorevler);
             _context.EkipDavetleri.RemoveRange(ekip.Davetler);
@@ -442,125 +557,156 @@ namespace GorevTakipSistemi.Controllers
             
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true, message = "Karargah tamamen imha edildi. 💥" });
+            return Json(new { success = true, message = "Ekip kalıcı olarak silindi." });
         }
-        // --- GÖREV DETAYINI GETİR (AJAX) ---
-[HttpGet]
-public async Task<IActionResult> GorevGetir(int id)
-{
-    var userId = HttpContext.Session.GetInt32("KullaniciId");
-    
-    var gorev = await _context.Gorevler
-        .Include(g => g.AltGorevler)
-            .ThenInclude(a => a.Tamamlamalar)
-                .ThenInclude(t => t.Kullanici)
-        .Select(g => new {
-            g.Id,
-            g.GorevAdi,
-            g.Aciklama,
-            tarih = g.Tarih.ToString("yyyy-MM-dd"),
-            g.DurumAktifMi,
-            altGorevler = g.AltGorevler.Select(a => new { 
-                id = a.Id, 
-                baslik = a.Baslik, 
-                // Eğer ekip göreviyse, giriş yapan kullanıcının kaydı var mı kontrol et, yoksa normal TamamlandiMi
-                tamamlandiMi = g.EkipId != null ? a.Tamamlamalar.Any(t => t.KullaniciId == userId) : a.TamamlandiMi,
-                tamamlayanlar = a.Tamamlamalar.Select(t => t.Kullanici.Ad).ToList()
-            }).ToList()
-        }).FirstOrDefaultAsync(x => x.Id == id);
 
-    return Json(gorev);
-}
+        // ===== EKIP GOREV DETAY - AJAX =====
 
-// --- GÖREV GÜNCELLE (SADECE LİDER) ---
-[HttpPost]
-public async Task<IActionResult> EkipGorevGuncelle(int id, string gorevAdi, string aciklama, DateTime tarih)
-{
-    var userId = HttpContext.Session.GetInt32("KullaniciId");
-    var gorev = await _context.Gorevler.Include(g => g.Ekip).FirstOrDefaultAsync(x => x.Id == id);
-    
-    if (gorev == null) return Json(new { success = false });
+        /// <summary>
+        /// Belirtilen ekip gorevinin detaylarini AJAX istegi icin JSON formatinda dondurur.
+        /// Alt gorevler, tamamlama durumlari ve tamamlayan kullanici bilgileri dahil edilir.
+        /// Ekip gorevlerinde tamamlama durumu oturumdaki kullaniciya ozel olarak hesaplanir.
+        /// </summary>
+        /// <param name="id">Detaylari getirilecek gorevin kimlik numarasi.</param>
+        /// <returns>Gorev detaylarini iceren JSON yaniti.</returns>
+        [HttpGet]
+        public async Task<IActionResult> GorevGetir(int id)
+        {
+            var userId = HttpContext.Session.GetInt32("KullaniciId");
+            
+            var gorev = await _context.Gorevler
+                .Include(g => g.AltGorevler)
+                    .ThenInclude(a => a.Tamamlamalar)
+                        .ThenInclude(t => t.Kullanici)
+                .Select(g => new {
+                    g.Id,
+                    g.GorevAdi,
+                    g.Aciklama,
+                    tarih = g.Tarih.ToString("yyyy-MM-dd"),
+                    g.DurumAktifMi,
+                    altGorevler = g.AltGorevler.Select(a => new { 
+                        id = a.Id, 
+                        baslik = a.Baslik, 
+                        // Ekip gorevlerinde kullaniciya ozel tamamlama durumu, kisisel gorevlerde genel durum
+                        tamamlandiMi = g.EkipId != null ? a.Tamamlamalar.Any(t => t.KullaniciId == userId) : a.TamamlandiMi,
+                        tamamlayanlar = a.Tamamlamalar.Select(t => t.Kullanici.Ad).ToList()
+                    }).ToList()
+                }).FirstOrDefaultAsync(x => x.Id == id);
 
-    // Güvenlik: Sadece lider düzenleyebilir
-    var liderMi = await _context.EkipUyeleri.AnyAsync(u => u.EkipId == gorev.EkipId && u.KullaniciId == userId && u.Rol == "Lider");
-    if (!liderMi) return Json(new { success = false, message = "Düzenleme yetkiniz yok!" });
+            return Json(gorev);
+        }
 
-    gorev.GorevAdi = gorevAdi;
-    gorev.Aciklama = aciklama ?? "";
-    gorev.Tarih = tarih;
+        // ===== EKIP GOREV GUNCELLEME =====
 
-    // LOG SİSTEMİ
-    string adSoyad = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Bilinmeyen Kullanıcı";
-    _context.SistemLoglari.Add(new SistemLog {
-        KullaniciAdi = adSoyad,
-        YapilanIslem = $"Ekip görevini güncelledi ({gorev.Ekip?.Ad}): {gorevAdi}",
-        IpAdresi = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmeyen IP",
-        IslemTarihi = DateTime.Now
-    });
+        /// <summary>
+        /// Ekip gorevini guncelleyen POST metodu. Yalnizca ekip lideri duzenleme yapabilir.
+        /// Guncelleme islemi sistem loguna kaydedilir.
+        /// </summary>
+        /// <param name="id">Guncellenecek gorevin kimlik numarasi.</param>
+        /// <param name="gorevAdi">Gorevin yeni adi.</param>
+        /// <param name="aciklama">Gorevin yeni aciklamasi.</param>
+        /// <param name="tarih">Gorevin yeni hedef tarihi.</param>
+        /// <returns>Islem sonucunu iceren JSON yaniti.</returns>
+        [HttpPost]
+        public async Task<IActionResult> EkipGorevGuncelle(int id, string gorevAdi, string aciklama, DateTime tarih)
+        {
+            var userId = HttpContext.Session.GetInt32("KullaniciId");
+            var gorev = await _context.Gorevler.Include(g => g.Ekip).FirstOrDefaultAsync(x => x.Id == id);
+            
+            if (gorev == null) return Json(new { success = false });
 
-    await _context.SaveChangesAsync();
-    return Json(new { success = true, message = "Görev güncellendi! 📝" });
-}
+            // Yetki kontrolu: Yalnizca ekip lideri gorev duzenleyebilir
+            var liderMi = await _context.EkipUyeleri.AnyAsync(u => u.EkipId == gorev.EkipId && u.KullaniciId == userId && u.Rol == "Lider");
+            if (!liderMi) return Json(new { success = false, message = "Düzenleme yetkiniz yok!" });
 
-// --- GÖREV SİL (SADECE LİDER) ---
-[HttpPost]
-public async Task<IActionResult> EkipGorevSil(int id)
-{
-    var userId = HttpContext.Session.GetInt32("KullaniciId");
-    var gorev = await _context.Gorevler.Include(g => g.Ekip).FirstOrDefaultAsync(x => x.Id == id);
-    if (gorev == null) return Json(new { success = false });
+            gorev.GorevAdi = gorevAdi;
+            gorev.Aciklama = aciklama ?? "";
+            gorev.Tarih = tarih;
 
-    var liderMi = await _context.EkipUyeleri.AnyAsync(u => u.EkipId == gorev.EkipId && u.KullaniciId == userId && u.Rol == "Lider");
-    if (!liderMi) return Json(new { success = false, message = "Silme yetkiniz yok!" });
+            // Sistem loglama: Ekip gorev guncelleme islemini kayit altina al
+            string adSoyad = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Bilinmeyen Kullanıcı";
+            _context.SistemLoglari.Add(new SistemLog {
+                KullaniciAdi = adSoyad,
+                YapilanIslem = $"Ekip görevini güncelledi ({gorev.Ekip?.Ad}): {gorevAdi}",
+                IpAdresi = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmeyen IP",
+                IslemTarihi = DateTime.Now
+            });
 
-    // LOG SİSTEMİ
-    string adSoyad = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Bilinmeyen Kullanıcı";
-    _context.SistemLoglari.Add(new SistemLog {
-        KullaniciAdi = adSoyad,
-        YapilanIslem = $"Ekip görevini sildi ({gorev.Ekip?.Ad}): {gorev.GorevAdi}",
-        IpAdresi = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmeyen IP",
-        IslemTarihi = DateTime.Now
-    });
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Görev başarıyla güncellendi." });
+        }
 
-    _context.Gorevler.Remove(gorev);
-    await _context.SaveChangesAsync();
-    return Json(new { success = true, message = "Görev sistemden tamamen silindi! 🗑️" });
-}
+        // ===== EKIP GOREV SILME =====
 
-// --- ÜYENİN TAKIMDAN KENDİ İSTEĞİYLE AYRILMASI ---
-[HttpPost]
-public async Task<IActionResult> TakimdanAyril(int ekipId)
-{
-    var userId = HttpContext.Session.GetInt32("KullaniciId");
-    if (userId == null) return Json(new { success = false, message = "Oturum kapalı." });
+        /// <summary>
+        /// Ekip gorevini kalici olarak silen POST metodu. Yalnizca ekip lideri silme yapabilir.
+        /// Silme islemi sistem loguna kaydedilir.
+        /// </summary>
+        /// <param name="id">Silinecek gorevin kimlik numarasi.</param>
+        /// <returns>Islem sonucunu iceren JSON yaniti.</returns>
+        [HttpPost]
+        public async Task<IActionResult> EkipGorevSil(int id)
+        {
+            var userId = HttpContext.Session.GetInt32("KullaniciId");
+            var gorev = await _context.Gorevler.Include(g => g.Ekip).FirstOrDefaultAsync(x => x.Id == id);
+            if (gorev == null) return Json(new { success = false });
 
-    var uyeKaydi = await _context.EkipUyeleri.FirstOrDefaultAsync(u => u.EkipId == ekipId && u.KullaniciId == userId);
-    if (uyeKaydi == null) return Json(new { success = false, message = "Zaten bu takımda değilsiniz." });
+            // Yetki kontrolu: Yalnizca ekip lideri gorev silebilir
+            var liderMi = await _context.EkipUyeleri.AnyAsync(u => u.EkipId == gorev.EkipId && u.KullaniciId == userId && u.Rol == "Lider");
+            if (!liderMi) return Json(new { success = false, message = "Silme yetkiniz yok!" });
 
-    if (uyeKaydi.Rol == "Lider") 
-    {
-        return Json(new { success = false, message = "Takım liderleri doğrudan ayrılamaz. Önce ekibi dağıtmalı veya liderliği devretmelisiniz." });
-    }
+            // Sistem loglama: Ekip gorev silme islemini kayit altina al
+            string adSoyad = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Bilinmeyen Kullanıcı";
+            _context.SistemLoglari.Add(new SistemLog {
+                KullaniciAdi = adSoyad,
+                YapilanIslem = $"Ekip görevini sildi ({gorev.Ekip?.Ad}): {gorev.GorevAdi}",
+                IpAdresi = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmeyen IP",
+                IslemTarihi = DateTime.Now
+            });
 
-    _context.EkipUyeleri.Remove(uyeKaydi);
+            _context.Gorevler.Remove(gorev);
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Görev kalıcı olarak silindi." });
+        }
 
-    // İsteğe bağlı: Bekleyen görev tamamlamalarını silmek (Eğer kullanıcıya atananlar varsa)
-    // var kullaniciTamamlamalari = _context.GorevTamamlamalari.Where(t => t.KullaniciId == userId && t.Gorev.EkipId == ekipId);
-    // _context.GorevTamamlamalari.RemoveRange(kullaniciTamamlamalari);
+        // ===== TAKIMDAN AYRILMA =====
 
-    string adSoyad = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Bilinmeyen Kullanıcı";
-    _context.SistemLoglari.Add(new SistemLog {
-        KullaniciAdi = adSoyad,
-        YapilanIslem = $"Takımdan kendi isteğiyle ayrıldı (Ekip ID: {ekipId})",
-        IpAdresi = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmeyen IP",
-        IslemTarihi = DateTime.Now
-    });
+        /// <summary>
+        /// Kullanicinin kendi istegi ile ekipten ayrilmasini saglayan POST metodu.
+        /// Ekip lideri dogrudan ayrilamaz; once ekibi dagitmali veya liderligi devretmelidir.
+        /// Ayrilma islemi sistem loguna kaydedilir.
+        /// </summary>
+        /// <param name="ekipId">Ayrilmak istenen ekibin kimlik numarasi.</param>
+        /// <returns>Islem sonucunu iceren JSON yaniti.</returns>
+        [HttpPost]
+        public async Task<IActionResult> TakimdanAyril(int ekipId)
+        {
+            var userId = HttpContext.Session.GetInt32("KullaniciId");
+            if (userId == null) return Json(new { success = false, message = "Oturum kapalı." });
 
-    await _context.SaveChangesAsync();
+            var uyeKaydi = await _context.EkipUyeleri.FirstOrDefaultAsync(u => u.EkipId == ekipId && u.KullaniciId == userId);
+            if (uyeKaydi == null) return Json(new { success = false, message = "Zaten bu takımda değilsiniz." });
 
-    // Görev durumlarını yeniden değerlendirmek gerekebilir, ancak şimdilik bunu geçiyoruz.
+            // Lider dogrudan ayrilamaz; once ekibi dagitmali veya liderligi devretmelidir
+            if (uyeKaydi.Rol == "Lider") 
+            {
+                return Json(new { success = false, message = "Takım liderleri doğrudan ayrılamaz. Önce ekibi dağıtmalı veya liderliği devretmelisiniz." });
+            }
 
-    return Json(new { success = true, message = "Takımdan başarıyla ayrıldınız." });
-}
+            _context.EkipUyeleri.Remove(uyeKaydi);
+
+            // Sistem loglama: Takimdan ayrilma islemini kayit altina al
+            string adSoyad = HttpContext.Session.GetString("KullaniciAdSoyad") ?? "Bilinmeyen Kullanıcı";
+            _context.SistemLoglari.Add(new SistemLog {
+                KullaniciAdi = adSoyad,
+                YapilanIslem = $"Takımdan kendi isteğiyle ayrıldı (Ekip ID: {ekipId})",
+                IpAdresi = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmeyen IP",
+                IslemTarihi = DateTime.Now
+            });
+
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Takımdan başarıyla ayrıldınız." });
+        }
     }
 }

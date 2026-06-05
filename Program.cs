@@ -1,37 +1,37 @@
 using Microsoft.EntityFrameworkCore;
 using GorevTakipSistemi.Data;
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddMemoryCache(); // 🧠 RAM tabanlı IP takibi için şart!
+builder.Services.AddMemoryCache(); // Bellek tabanli onbellekleme servisi (IP takibi ve hiz sinirlamasi icin kullanilir)
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.Limits.MaxRequestBodySize = 52428800; // 50MB'a kadar izin veriyoruz
+    serverOptions.Limits.MaxRequestBodySize = 52428800; // Maksimum istek govde boyutunu 50 MB olarak sinirlandirir
     serverOptions.AddServerHeader = false;
 });
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
-// Controller'lar ve view'ler için eklemeler (Tüm projeyi Global Filtrelerle sarmala)
+// MVC denetleyici ve gorunum servislerini global filtrelerle birlikte yapilandirir
 builder.Services.AddControllersWithViews(options => 
 {
     options.Filters.Add<GorevTakipSistemi.Filters.BakimModuFilter>();
-    options.Filters.Add<GorevTakipSistemi.Filters.IslemLogFilter>(); // <-- YENI EKLENDI
+    options.Filters.Add<GorevTakipSistemi.Filters.IslemLogFilter>(); // Tum POST islemlerini otomatik olarak loglar
 });
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30); // Oturum 30 dakika hareketsiz kalırsa kapanır
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Oturum zaman asimi suresi: 30 dakika hareketsizlik sonrasi sona erer
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
 
-// SignalR Servisini Ekle
+// SignalR gercek zamanli iletisim servisini kaydeder
 builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// 🔥 OTOMATİK VERİTABANI GÜNCELLEME (CI/CD İÇİN ŞART)
+// Uygulama baslatildiginda bekleyen veritabani migration islemlerini otomatik olarak uygular
 using (var scope = app.Services.CreateScope())
 {
     try 
@@ -45,33 +45,33 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configure the HTTP request pipeline.
+// HTTP istek hattini ortam turune gore yapilandirir
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    // HSTS varsayilan suresi 30 gundur. Uretim ortami icin bu degerin ayarlanmasi onerilir.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 
-// 🔥 ZAP GÜVENLİK KALKANLARI (HTTP HEADERS)
+// HTTP guvenlik basliklarini tum yanıtlara ekleyen ara katman yazilimi
 app.Use(async (context, next) =>
 {
-    // 1. Clickjacking Koruması (Siteni iframe içine almalarını engeller)
+    // Clickjacking saldirilarina karsi koruma saglar, sayfanin yalnizca ayni kaynaktan iframe icinde gosterilmesine izin verir
     context.Response.Headers.Append("X-Frame-Options", "SAMEORIGIN");
     
-    // 2. MIME-Sniffing Koruması (İçerik türü manipülasyonunu engeller)
+    // MIME tur koklamasini devre disi birakarak icerik turu manipulasyonunu onler
     context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
     
-    // 3. Tarayıcı XSS Korumasını Zorla
+    // Tarayici tarafindaki XSS filtreleme mekanizmasini etkinlestirir
     context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
 
-    // 4. Content Security Policy (CSP) - Sadece güvenilir kaynaklardan kod çalışmasına izin ver
-    // Not: Tailwind, SweetAlert, jQuery ve Google reCAPTCHA kullandığımız için onlara izin verdik.
+    // Icerik guvenlik politikasi tanimlari: yalnizca guvenilir kaynaklardan icerik yuklemesine izin verir
+    // Tailwind CSS, SweetAlert, jQuery ve Google reCAPTCHA gibi harici bagimliliklara ozel izinler tanimlanmistir
     context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://www.google.com https://www.gstatic.com https://code.jquery.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; frame-src 'self' https://www.google.com; img-src 'self' data: https:;");
 
-    // 5. ASP.NET Bilgi Sızıntısını Gizle
+    // Sunucu teknolojisi bilgi sizintisini onlemek icin ilgili HTTP basliklarini kaldirir
     context.Response.Headers.Remove("X-Powered-By");
     context.Response.Headers.Remove("Server");
 

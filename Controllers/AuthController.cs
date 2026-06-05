@@ -10,56 +10,81 @@ using System.Net.Mail;
 using Microsoft.AspNetCore.Http;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Memory; // 🔥 IP Takibi için eklendi
+using Microsoft.Extensions.Caching.Memory;
 
 namespace GorevTakipSistemi.Controllers
 {
+    /// <summary>
+    /// Kimlik dogrulama islemlerini yoneten controller.
+    /// Kayit, giris, cikis, e-posta dogrulama, sifre sifirlama ve kullanici adi hatirlatma islevlerini icerir.
+    /// </summary>
     public class AuthController : Controller
     {
         private readonly AppDbContext _context;
-        private readonly IMemoryCache _cache; // 🔥 Hafıza motoru eklendi
+        private readonly IMemoryCache _cache;
         private readonly IConfiguration _config;
 
+        /// <summary>
+        /// AuthController yapilandirici metodu. Gerekli servisleri bagimlilik enjeksiyonu ile alir.
+        /// </summary>
+        /// <param name="context">Veritabani erisim baglami.</param>
+        /// <param name="cache">IP tabanli hiz sinirlamasi icin bellek ici onbellekleme servisi.</param>
+        /// <param name="config">Uygulama yapilandirma ayarlari.</param>
         public AuthController(AppDbContext context, IMemoryCache cache, IConfiguration config)
         {
             _context = context;
-            _cache = cache; // Bağımlılık enjekte edildi
+            _cache = cache;
             _config = config;
         }
 
-        // --- KAYIT OL VE GİRİŞ YAP İŞLEMLERİ ---
+        /// <summary>
+        /// Kayit formunun goruntulendigi sayfayi dondurur.
+        /// </summary>
+        /// <returns>Kayit formu gorunumunu dondurur.</returns>
         public IActionResult Register() { return View(); }
 
-        // --- KAYIT OL (POST) ---
+        /// <summary>
+        /// Yeni kullanici kayit islemini gerceklestirir.
+        /// IP tabanli hiz sinirlamasi, reCAPTCHA dogrulamasi, KVKK onayi ve veri dogrulama kontrolleri uygulanir.
+        /// Basarili kayit sonrasi e-posta aktivasyon linki gonderilir.
+        /// </summary>
+        /// <param name="Ad">Kullanicinin adi.</param>
+        /// <param name="Soyad">Kullanicinin soyadi.</param>
+        /// <param name="KullaniciAdi">Sistemde kullanilacak benzersiz kullanici adi.</param>
+        /// <param name="Email">Kullanicinin e-posta adresi.</param>
+        /// <param name="Sifre">Kullanicinin belirledigi sifre.</param>
+        /// <param name="KvkkOnay">KVKK ve gizlilik sozlesmesi onay durumu.</param>
+        /// <returns>Basarili kayit sonrasi giris sayfasina yonlendirir.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(string Ad, string Soyad, string KullaniciAdi, string Email, string Sifre, string KvkkOnay)
         {
+            // Form verilerini geri doldurmak icin ViewBag'e aktar
             ViewBag.Ad = Ad;
             ViewBag.Soyad = Soyad;
             ViewBag.KullaniciAdi = KullaniciAdi;
             ViewBag.Email = Email;
             
-            // 🔥 1. IP HIZ SINIRI (RATE LIMITING) VE ANTI-SPAM KALKANI
+            // Adim 1: IP tabanli hiz sinirlamasi (Rate Limiting) kontrolu
             string musteriIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Bilinmeyen IP";
             string cacheKey = $"Kayit_IP_{musteriIp}";
 
-            // Eğer bu IP son 15 dakika içinde sisteme kayıt olduysa geçit verme!
+            // Ayni IP adresinden 15 dakika icinde tekrar kayit girisimi engellenir
             if (_cache.TryGetValue(cacheKey, out DateTime sonKayitZamani))
             {
                 TempData["Error"] = "Güvenlik İhlali! Aynı internet ağından (IP) 15 dakikada sadece 1 kez kayıt olabilirsiniz.";
 
-                // Yöneticiye (Sana) şüpheli aktivite uyarı maili gönderiyoruz
+                // Yoneticiye supheli aktivite uyari e-postasi gonder
                 try
                 {
                     MailMessage uyariMail = new MailMessage();
                     uyariMail.From = new MailAddress("info@gorevlab.com.tr", "GorevLab Güvenlik Sistemi");
-                    uyariMail.To.Add("info@gorevlab.com.tr"); // Uyarıyı alacak yönetici maili
-                    uyariMail.Subject = "🚨 UYARI: Şüpheli Peş Peşe Kayıt Denemesi!";
+                    uyariMail.To.Add("info@gorevlab.com.tr");
+                    uyariMail.Subject = "UYARI: Supheli Pes Pese Kayit Denemesi!";
                     uyariMail.IsBodyHtml = true;
                     uyariMail.Body = $@"
                         <div style='font-family: Arial, sans-serif; max-width: 550px; margin: 0 auto; padding: 20px; border: 2px solid #ef4444; border-radius: 12px; background-color: #fffafb;'>
-                            <h2 style='color: #b91c1c; margin-top: 0;'>🚨 Şüpheli Aktivite Algılandı!</h2>
+                            <h2 style='color: #b91c1c; margin-top: 0;'>Supheli Aktivite Algilandi</h2>
                             <p style='color: #334155; font-size: 15px;'>Sisteminizdeki kayıt formuna aynı internet ağından üst üste üyelik isteği gönderildi.</p>
                             <div style='background-color: #fee2e2; border-left: 5px solid #ef4444; padding: 12px; margin: 15px 0; border-radius: 4px;'>
                                 <b>Şüpheli IP Adresi:</b> <span style='color: #b91c1c; font-family: monospace; font-size: 16px;'>{musteriIp}</span>
@@ -81,7 +106,7 @@ namespace GorevTakipSistemi.Controllers
                 return View();
             }
 
-            // 🔥 2. GOOGLE RECAPTCHA ONAY KUTUSU GÜVENLİK SORGUSU
+            // Adim 2: Google reCAPTCHA dogrulamasi
             var recaptchaResponse = Request.Form["g-recaptcha-response"];
             if (string.IsNullOrEmpty(recaptchaResponse))
             {
@@ -102,7 +127,7 @@ namespace GorevTakipSistemi.Controllers
                 }
             }
 
-            // --- 3. VERİ KONTROLLERİ VE DOĞRULAMALAR ---
+            // Adim 3: Veri dogrulama kontrolleri
             if (string.IsNullOrEmpty(KvkkOnay) || KvkkOnay != "true")
             {
                 TempData["Error"] = "Sisteme kayıt olabilmek için KVKK ve Gizlilik Sözleşmesi'ni onaylamanız gerekmektedir!";
@@ -117,27 +142,33 @@ namespace GorevTakipSistemi.Controllers
                 return View();
             }
 
+            // Ad ve soyad alanlari rakam iceremez
             if (Ad.Any(char.IsDigit) || Soyad.Any(char.IsDigit))
             {
                 TempData["Error"] = "Ad ve Soyad alanları rakam (sayı) içeremez!";
                 return View();
             }
 
+            // Sifre guclulugunun dogrulanmasi
             if (!GecerliSifreMi(Sifre))
             {
                 TempData["Error"] = "Şifreniz en az 8 karakter olmalı; en az 1 büyük harf ve 1 rakam içermelidir.";
                 return View();
             }
 
+            // Kullanici adi benzersizlik kontrolu
             if (_context.Kullanicilar.Any(k => k.KullaniciAdi == KullaniciAdi))
             {
                 TempData["Error"] = "Bu Kullanıcı Adı zaten alınmış!"; return View();
             }
+
+            // E-posta adresi benzersizlik kontrolu
             if (_context.Kullanicilar.Any(k => k.Email == Email))
             {
                 TempData["Error"] = "Bu E-Posta adresi ile daha önce kayıt olunmuş!"; return View();
             }
 
+            // Ilk kullaniciya Admin, sonrakilere Normal Kullanici rolu ata
             var rol = _context.Kullanicilar.Any() ? KullaniciRol.NormalKullanici : KullaniciRol.Admin;
             string sifreHash = Convert.ToBase64String(Encoding.UTF8.GetBytes(Sifre));
 
@@ -158,11 +189,11 @@ namespace GorevTakipSistemi.Controllers
             _context.Kullanicilar.Add(yeniKullanici);
             _context.SaveChanges();
 
-            // 🔥 KAYIT BAŞARILI: Bu IP adresini 15 dakika boyunca RAM'de kilitli tutuyoruz
+            // Basarili kayit sonrasi IP adresini 15 dakika sureli olarak kilitle
             var cacheOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(15));
             _cache.Set(cacheKey, DateTime.Now, cacheOptions);
 
-            // --- E-POSTA AKTİVASYON MAİLİ GÖNDERME ---
+            // Kullaniciya e-posta aktivasyon linki gonder
             try
             {
                 string link = Url.Action("EmailOnayla", "Auth", new { token = yeniKullanici.EmailConfirmationToken }, Request.Scheme) ?? $"https://gorevlab.com.tr/Auth/EmailOnayla?token={yeniKullanici.EmailConfirmationToken}";
@@ -192,32 +223,39 @@ namespace GorevTakipSistemi.Controllers
             }
             catch (Exception ex)
             {
+                // E-posta gonderim hatasi sessizce gecilir; kayit islemi basarili olmustur
             }
 
             TempData["Success"] = "Kayıt başarılı! Lütfen e-posta adresinize gönderilen onay linkine tıklayın.";
             return RedirectToAction("Login");
         }
 
+        /// <summary>
+        /// Giris formunun goruntulendigi sayfayi dondurur.
+        /// Giris yapmis kullanicilar anasayfaya yonlendirilir.
+        /// Bakim modu aktifse ve kullanici Kurucu degilse oturumu temizler.
+        /// </summary>
+        /// <returns>Giris formu gorunumunu dondurur.</returns>
         [HttpGet]
         public IActionResult Login() 
         { 
-            // Eğer kullanıcı zaten giriş yapmışsa
+            // Kullanici zaten oturum acmissa yonlendir
             if (HttpContext.Session.GetInt32("KullaniciId") != null)
             {
                 var rol = HttpContext.Session.GetInt32("KullaniciRol") ?? 0;
                 
-                // Bakım modu açıksa ve kişi Kurucu değilse, oturumu temizle ki login sayfasını temiz görsün
+                // Bakim modu aktifse ve kullanici Kurucu degilse oturumu temizle
                 if (GorevTakipSistemi.Models.SiteSettings.BakimModuAktif && rol != (int)KullaniciRol.Owner)
                 {
                     HttpContext.Session.Clear();
                 }
                 else
                 {
-                    // Aksi halde anasayfaya yönlendir
                     return RedirectToAction("Index", "Home");
                 }
             }
 
+            // "Beni Hatirla" ozelligi ile saklanan kullanici adini forma doldir
             if (Request.Cookies.TryGetValue("HatirlananKullanici", out string hatirlananKullanici))
             {
                 ViewBag.HatirlananKullanici = hatirlananKullanici;
@@ -225,6 +263,14 @@ namespace GorevTakipSistemi.Controllers
             return View(); 
         }
 
+        /// <summary>
+        /// Kullanici giris islemini gerceklestirir. Kimlik bilgileri, e-posta dogrulamasi ve ban durumu kontrol edilir.
+        /// Sureli ban bitmisse otomatik olarak kaldirilir. Basarili giris sonrasi oturum bilgileri ayarlanir ve sistem loguna kaydedilir.
+        /// </summary>
+        /// <param name="KullaniciAdi">Giris yapilacak kullanici adi.</param>
+        /// <param name="Sifre">Kullanicinin sifresi.</param>
+        /// <param name="BeniHatirla">Kullanici adinin cerez ile hatirlanip hatirlanmayacagi.</param>
+        /// <returns>Basarili giris sonrasi anasayfaya yonlendirir.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Login(string KullaniciAdi, string Sifre, bool BeniHatirla = false)
@@ -234,6 +280,7 @@ namespace GorevTakipSistemi.Controllers
                 TempData["Error"] = "Kullanıcı adı ve şifre gereklidir!"; return View();
             }
 
+            // Girilen sifreyi hash'leyerek veritabanindaki deger ile karsilastir
             string girilenSifreHash = Convert.ToBase64String(Encoding.UTF8.GetBytes(Sifre));
             var kullanici = _context.Kullanicilar.FirstOrDefault(k => k.KullaniciAdi == KullaniciAdi && k.SifreHash == girilenSifreHash);
 
@@ -242,16 +289,19 @@ namespace GorevTakipSistemi.Controllers
                 TempData["Error"] = "Kullanıcı adı veya şifre hatalı!"; return View();
             }
 
+            // E-posta dogrulama kontrolu
             if (!kullanici.IsEmailConfirmed)
             {
                 TempData["Error"] = "Hesabınız henüz onaylanmamış. Lütfen e-posta adresinize gelen aktivasyon linkine tıklayın.";
                 return View();
             }
 
+            // Ban durumu kontrolu ve sureli ban otomatik kaldirma
             if (kullanici.IsBanned)
             {
                 if (kullanici.BanBitisTarihi.HasValue && kullanici.BanBitisTarihi.Value <= DateTime.Now)
                 {
+                    // Ban suresi dolmus, otomatik olarak kaldir
                     kullanici.IsBanned = false;
                     kullanici.BanNedeni = null;
                     kullanici.BanBitisTarihi = null;
@@ -259,6 +309,7 @@ namespace GorevTakipSistemi.Controllers
                 }
                 else
                 {
+                    // Ban hala gecerli, kullaniciya bilgi ver
                     string banMesaji = kullanici.BanBitisTarihi.HasValue ? $"Hesabınız {kullanici.BanBitisTarihi.Value:dd.MM.yyyy HH:mm} tarihine kadar askıya alınmıştır. Neden: {kullanici.BanNedeni}" : "SİSTEME ERİŞİMİNİZ YASAKLANMIŞTIR! Hesabınız kalıcı olarak askıya alındı.";
                     
                     TempData["Error"] = banMesaji;
@@ -266,10 +317,12 @@ namespace GorevTakipSistemi.Controllers
                 }
             }
 
+            // Oturum bilgilerini ayarla
             HttpContext.Session.SetInt32("KullaniciId", kullanici.Id);
             HttpContext.Session.SetString("KullaniciAdSoyad", $"{kullanici.Ad} {kullanici.Soyad}");
             HttpContext.Session.SetInt32("KullaniciRol", (int)kullanici.Rol);
 
+            // Giris islemini sistem loguna kaydet
             _context.SistemLoglari.Add(new SistemLog {
                 KullaniciAdi = $"{kullanici.Ad} {kullanici.Soyad}",
                 YapilanIslem = "Sisteme giriş yapıldı",
@@ -279,6 +332,7 @@ namespace GorevTakipSistemi.Controllers
             
             _context.SaveChanges();
 
+            // "Beni Hatirla" secenegi isaretlenmisse kullanici adini cerez olarak sakla
             if (BeniHatirla)
             {
                 var cookieOptions = new CookieOptions { Expires = DateTime.Now.AddDays(30), HttpOnly = true, Secure = true };
@@ -292,6 +346,10 @@ namespace GorevTakipSistemi.Controllers
             return RedirectToAction("Index", "Home"); 
         }
 
+        /// <summary>
+        /// Kullanicinin oturumunu kapatir, tum oturum verilerini ve hatirla cerezini temizler.
+        /// </summary>
+        /// <returns>Giris sayfasina yonlendirir.</returns>
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
@@ -299,6 +357,12 @@ namespace GorevTakipSistemi.Controllers
             return RedirectToAction("Login");
         }
 
+        /// <summary>
+        /// E-posta aktivasyon tokeni ile kullanici hesabini dogrular ve aktif hale getirir.
+        /// Token dogrulandiktan sonra tekrar kullanilamaz hale getirilir.
+        /// </summary>
+        /// <param name="token">E-posta ile gonderilen benzersiz aktivasyon tokeni.</param>
+        /// <returns>Giris sayfasina yonlendirir.</returns>
         [HttpGet]
         public IActionResult EmailOnayla(string token)
         {
@@ -312,6 +376,7 @@ namespace GorevTakipSistemi.Controllers
                 return RedirectToAction("Login");
             }
 
+            // Hesabi onayla ve tokeni gecersiz kil
             kullanici.IsEmailConfirmed = true;
             kullanici.EmailConfirmationToken = null; 
 
@@ -322,6 +387,11 @@ namespace GorevTakipSistemi.Controllers
             return RedirectToAction("Login");
         }
 
+        /// <summary>
+        /// Belirtilen e-posta adresine ait kullanici adini hatirlatma e-postasi gonderir.
+        /// </summary>
+        /// <param name="email">Kullanici adinin arandigi e-posta adresi.</param>
+        /// <returns>Giris sayfasina yonlendirir.</returns>
         [HttpGet]
         public IActionResult KullaniciAdiHatirlat(string email)
         {
@@ -339,6 +409,7 @@ namespace GorevTakipSistemi.Controllers
                 return RedirectToAction("Login");
             }
 
+            // Kullanici adi bilgisini e-posta ile gonder
             try
             {
                 MailMessage mail = new MailMessage();
@@ -376,9 +447,19 @@ namespace GorevTakipSistemi.Controllers
             return RedirectToAction("Login");
         }
 
+        /// <summary>
+        /// Sifre sifirlama formunun goruntulendigi sayfayi dondurur.
+        /// </summary>
+        /// <returns>Sifre sifirlama formu gorunumunu dondurur.</returns>
         [HttpGet]
         public IActionResult SifremiUnuttum() { return View(); }
 
+        /// <summary>
+        /// Sifre sifirlama islemi icin 6 haneli dogrulama kodu uretir ve kullanicinin e-posta adresine gonderir.
+        /// Dogrulama kodu 15 dakika gecerlidir.
+        /// </summary>
+        /// <param name="Email">Sifre sifirlanacak hesabin e-posta adresi.</param>
+        /// <returns>Kod dogrulama sayfasina yonlendirir.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult SifremiUnuttum(string Email)
@@ -390,6 +471,7 @@ namespace GorevTakipSistemi.Controllers
                 return View();
             }
 
+            // 6 haneli rastgele dogrulama kodu uret ve veritabanina kaydet
             Random rnd = new Random();
             string dogrulamaKodu = rnd.Next(100000, 999999).ToString(); 
 
@@ -397,6 +479,7 @@ namespace GorevTakipSistemi.Controllers
             kullanici.ResetTokenBitisSuresi = DateTime.Now.AddMinutes(15); 
             _context.SaveChanges();
 
+            // Dogrulama kodunu kullaniciya e-posta ile gonder
             try
             {
                 MailMessage mail = new MailMessage();
@@ -433,6 +516,11 @@ namespace GorevTakipSistemi.Controllers
             }
         }
 
+        /// <summary>
+        /// Sifre sifirlama dogrulama kodu giris formunu goruntuleme (GET).
+        /// </summary>
+        /// <param name="email">Dogrulama kodunun gonderildigi e-posta adresi.</param>
+        /// <returns>Kod dogrulama formu gorunumunu dondurur.</returns>
         [HttpGet]
         public IActionResult KodDogrulama(string email)
         {
@@ -441,6 +529,13 @@ namespace GorevTakipSistemi.Controllers
             return View();
         }
 
+        /// <summary>
+        /// Kullanicinin girdigi dogrulama kodunu kontrol eder. Kod dogruysa ve suresi gecmemisse
+        /// sifre belirleme sayfasina yonlendirir.
+        /// </summary>
+        /// <param name="email">Dogrulama kodunun gonderildigi e-posta adresi.</param>
+        /// <param name="dogrulamaKodu">Kullanicinin girdigi 6 haneli dogrulama kodu.</param>
+        /// <returns>Basarili dogrulamada sifre sifirlama sayfasina yonlendirir.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult KodDogrulama(string email, string dogrulamaKodu)
@@ -454,6 +549,7 @@ namespace GorevTakipSistemi.Controllers
                 return View();
             }
 
+            // Dogrulama kodunun suresinin dolup dolmadigini kontrol et
             if (kullanici.ResetTokenBitisSuresi < DateTime.Now)
             {
                 TempData["Error"] = "Bu kodun kullanım süresi (15 dk) dolmuş. Lütfen yeni kod isteyin.";
@@ -464,6 +560,12 @@ namespace GorevTakipSistemi.Controllers
             return RedirectToAction("SifreSifirla", new { email = email, kod = dogrulamaKodu });
         }
 
+        /// <summary>
+        /// Yeni sifre belirleme formunu goruntuleme (GET).
+        /// </summary>
+        /// <param name="email">Sifre sifirlanacak hesabin e-posta adresi.</param>
+        /// <param name="kod">Dogrulanmis sifirlama kodu.</param>
+        /// <returns>Sifre sifirlama formu gorunumunu dondurur.</returns>
         [HttpGet]
         public IActionResult SifreSifirla(string email, string kod)
         {
@@ -473,10 +575,20 @@ namespace GorevTakipSistemi.Controllers
             return View();
         }
 
+        /// <summary>
+        /// Kullanicinin yeni sifresini belirler ve kaydeder. Sifre eslesme, gucluluK ve
+        /// token gecerlilik kontrolleri uygulanir. Basarili sifirlama sonrasi token gecersiz kilinir.
+        /// </summary>
+        /// <param name="email">Sifre sifirlanacak hesabin e-posta adresi.</param>
+        /// <param name="kod">Dogrulanmis sifirlama kodu.</param>
+        /// <param name="yeniSifre">Kullanicinin belirledigi yeni sifre.</param>
+        /// <param name="yeniSifreTekrar">Yeni sifrenin tekrar girisi (eslesme kontrolu icin).</param>
+        /// <returns>Basarili sifirlama sonrasi giris sayfasina yonlendirir.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult SifreSifirla(string email, string kod, string yeniSifre, string yeniSifreTekrar)
         {
+            // Sifre eslesme kontrolu
             if (yeniSifre != yeniSifreTekrar)
             {
                 TempData["Error"] = "Şifreler uyuşmuyor!";
@@ -485,6 +597,7 @@ namespace GorevTakipSistemi.Controllers
                 return View();
             }
 
+            // Sifre guclulugunun dogrulanmasi
             if (!GecerliSifreMi(yeniSifre))
             {
                 TempData["Error"] = "Şifreniz en az 8 karakter olmalı; en az 1 büyük harf ve 1 rakam içermelidir.";
@@ -493,6 +606,7 @@ namespace GorevTakipSistemi.Controllers
                 return View();
             }
 
+            // Token gecerliligi ve sure kontrolu
             var kullanici = _context.Kullanicilar.FirstOrDefault(k => k.Email == email && k.ResetToken == kod && k.ResetTokenBitisSuresi > DateTime.Now);
             if (kullanici == null) 
             {
@@ -500,6 +614,7 @@ namespace GorevTakipSistemi.Controllers
                 return RedirectToAction("Login");
             }
 
+            // Yeni sifreyi hash'leyerek kaydet ve sifirlama tokenini temizle
             kullanici.SifreHash = Convert.ToBase64String(Encoding.UTF8.GetBytes(yeniSifre));
             kullanici.ResetToken = null; 
             kullanici.ResetTokenBitisSuresi = null;
@@ -510,6 +625,12 @@ namespace GorevTakipSistemi.Controllers
             return RedirectToAction("Login");
         }
 
+        /// <summary>
+        /// Verilen sifrenin guvenlik kriterlerini karsilayip karsilamadigini kontrol eder.
+        /// Sifre en az 8 karakter uzunlugunda olmali, en az 1 buyuk harf ve 1 rakam icermelidir.
+        /// </summary>
+        /// <param name="sifre">Dogrulanacak sifre metni.</param>
+        /// <returns>Sifre gecerliyse true, degilse false dondurur.</returns>
         private bool GecerliSifreMi(string sifre)
         {
             if (string.IsNullOrEmpty(sifre) || sifre.Length < 8) return false;
