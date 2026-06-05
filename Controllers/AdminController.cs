@@ -243,7 +243,11 @@ namespace GorevTakipSistemi.Controllers
         public IActionResult RolDegistir(int id)
         {
             var sessionRol = HttpContext.Session.GetInt32("KullaniciRol") ?? 0;
-            if (sessionRol != (int)KullaniciRol.Admin && sessionRol != (int)KullaniciRol.Owner) return RedirectToAction("Index", "Home");
+            if (sessionRol != (int)KullaniciRol.Owner) 
+            {
+                TempData["Error"] = "Sadece Kurucu yetki verebilir!";
+                return RedirectToAction("Index", "Home");
+            }
 
             var currentUserId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
             var user = _context.Kullanicilar.Find(id);
@@ -289,7 +293,11 @@ namespace GorevTakipSistemi.Controllers
         public IActionResult KullaniciSil(int id)
         {
             var sessionRol = HttpContext.Session.GetInt32("KullaniciRol") ?? 0;
-            if (sessionRol != (int)KullaniciRol.Admin && sessionRol != (int)KullaniciRol.Owner) return RedirectToAction("Index", "Home");
+            if (sessionRol != (int)KullaniciRol.Owner) 
+            {
+                TempData["Error"] = "Sadece Kurucu kullanıcı silebilir!";
+                return RedirectToAction("Index", "Home");
+            }
 
             var currentUserId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
             var user = _context.Kullanicilar.Find(id);
@@ -770,8 +778,8 @@ namespace GorevTakipSistemi.Controllers
         public async Task<IActionResult> BildirimGonder(int? kullaniciId, string mesaj, string baslik = "Sistem Bildirimi")
         {
             var sessionRol = HttpContext.Session.GetInt32("KullaniciRol") ?? 0;
-            if (sessionRol != (int)KullaniciRol.Admin && sessionRol != (int)KullaniciRol.Owner) 
-                return Json(new { success = false, message = "Yetkisiz İşlem!" });
+            if (sessionRol != (int)KullaniciRol.Owner) 
+                return Json(new { success = false, message = "Sadece Kurucu bildirim gönderebilir!" });
 
             if (string.IsNullOrWhiteSpace(mesaj))
                 return Json(new { success = false, message = "Mesaj boş olamaz!" });
