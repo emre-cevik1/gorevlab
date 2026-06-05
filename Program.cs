@@ -1,5 +1,7 @@
-    using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using GorevTakipSistemi.Data;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddMemoryCache(); // 🧠 RAM tabanlı IP takibi için şart!
 builder.WebHost.ConfigureKestrel(serverOptions =>
