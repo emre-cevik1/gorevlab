@@ -317,7 +317,46 @@ namespace GorevTakipSistemi.Controllers
                     return RedirectToAction("Kullanicilar");
                 }
 
-                // Kullaniciya ait gorevleri sil
+                // Kullaniciya ait bildirimleri sil
+                var bildirimler = _context.Bildirimler.Where(b => b.KullaniciId == id);
+                _context.Bildirimler.RemoveRange(bildirimler);
+
+                // Kullaniciya ait alt gorev tamamlama kayitlarini sil
+                var altGorevTamamlamalari = _context.AltGorevTamamlamalari.Where(a => a.KullaniciId == id);
+                _context.AltGorevTamamlamalari.RemoveRange(altGorevTamamlamalari);
+
+                // Kullaniciya ait gorev tamamlama kayitlarini sil
+                var gorevTamamlamalari = _context.GorevTamamlamalari.Where(g => g.KullaniciId == id);
+                _context.GorevTamamlamalari.RemoveRange(gorevTamamlamalari);
+
+                // Kullaniciya ait ekip aktivitelerini sil
+                var ekipAktiviteleri = _context.EkipAktiviteleri.Where(a => a.KullaniciId == id);
+                _context.EkipAktiviteleri.RemoveRange(ekipAktiviteleri);
+
+                // Kullaniciya ait ekip davetlerini sil (gonderdikleri ve aldiklari)
+                var ekipDavetleri = _context.EkipDavetleri.Where(d => d.GonderenId == id || d.AliciId == id);
+                _context.EkipDavetleri.RemoveRange(ekipDavetleri);
+
+                // Kullaniciya ait ekip uyeliklerini sil
+                var ekipUyelikleri = _context.EkipUyeleri.Where(u => u.KullaniciId == id);
+                _context.EkipUyeleri.RemoveRange(ekipUyelikleri);
+
+                // Kullanicinin kurdugu ekipleri ve bagimli kayitlarini sil
+                var kurulanEkipler = _context.Ekipler.Where(e => e.KurucuId == id).ToList();
+                foreach (var ekip in kurulanEkipler)
+                {
+                    var ekipGorevleri = _context.Gorevler.Where(g => g.EkipId == ekip.Id);
+                    _context.Gorevler.RemoveRange(ekipGorevleri);
+                    var ekipUyeleri = _context.EkipUyeleri.Where(u => u.EkipId == ekip.Id);
+                    _context.EkipUyeleri.RemoveRange(ekipUyeleri);
+                    var ekipDavet = _context.EkipDavetleri.Where(d => d.EkipId == ekip.Id);
+                    _context.EkipDavetleri.RemoveRange(ekipDavet);
+                    var ekipAktivite = _context.EkipAktiviteleri.Where(a => a.EkipId == ekip.Id);
+                    _context.EkipAktiviteleri.RemoveRange(ekipAktivite);
+                }
+                _context.Ekipler.RemoveRange(kurulanEkipler);
+
+                // Kullaniciya ait kisisel gorevleri sil
                 var gorevler = _context.Gorevler.Where(g => g.KullaniciId == id);
                 _context.Gorevler.RemoveRange(gorevler);
 
