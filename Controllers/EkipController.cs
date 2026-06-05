@@ -446,12 +446,13 @@ namespace GorevTakipSistemi.Controllers
 [HttpGet]
 public async Task<IActionResult> GorevGetir(int id)
 {
-    var gorev = await _context.Gorevler.Select(g => new {
+    var gorev = await _context.Gorevler.Include(g => g.AltGorevler).Select(g => new {
         g.Id,
         g.GorevAdi,
         g.Aciklama,
         tarih = g.Tarih.ToString("yyyy-MM-dd"),
-        g.DurumAktifMi
+        g.DurumAktifMi,
+        altGorevler = g.AltGorevler.Select(a => new { id = a.Id, baslik = a.Baslik, tamamlandiMi = a.TamamlandiMi }).ToList()
     }).FirstOrDefaultAsync(x => x.Id == id);
 
     return Json(gorev);

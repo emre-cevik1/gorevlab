@@ -271,6 +271,22 @@
                 <div><label class="text-xs font-bold text-slate-600 mb-1 block">Görev Başlığı</label><input type="text" id="edit_Ad" class="antigravity-input w-full @(isLider ? "" : "bg-slate-100 cursor-not-allowed opacity-60")" @(isLider ? "" : "readonly")></div>
                 <div><label class="text-xs font-bold text-slate-600 mb-1 block">Açıklama</label><textarea id="edit_Aciklama" rows="4" class="antigravity-input w-full resize-none @(isLider ? "" : "bg-slate-100 cursor-not-allowed opacity-60")" @(isLider ? "" : "readonly")></textarea></div>
                 <div><label class="text-xs font-bold text-slate-600 mb-1 block">Teslim Tarihi</label><input type="date" id="edit_Tarih" class="antigravity-input w-full @(isLider ? "" : "bg-slate-100 cursor-not-allowed opacity-60")" @(isLider ? "" : "readonly")></div>
+                
+                <!-- Alt Görevler (Checklist) -->
+                <div class="mt-4 pt-4 border-t border-slate-100">
+                    <div class="flex justify-between items-center mb-2">
+                        <h6 class="text-[11px] font-black text-slate-400 uppercase tracking-widest m-0">Alt Görevler (Checklist)</h6>
+                    </div>
+                    <div id="checklistContainer" class="space-y-1 mb-3 max-h-40 overflow-y-auto pr-2">
+                        <!-- AJAX ile dolacak -->
+                    </div>
+                    @if(isLider) {
+                        <div class="flex gap-2">
+                            <input type="text" id="yeniAltGorevBaslik" class="antigravity-input w-full text-[13px]" placeholder="Yeni alt görev ekle...">
+                            <button type="button" id="btnAltGorevEkle" class="btn btn-sm btn-light border border-slate-200 text-indigo-600 font-bold px-3">Ekle</button>
+                        </div>
+                    }
+                </div>
             </div>
             @if (isLider) {
                 <div class="modal-footer border-0 p-6 pt-0 flex gap-3">
@@ -293,9 +309,44 @@
             $("#edit_Ad").val(data.gorevAdi);
             $("#edit_Aciklama").val(data.aciklama);
             $("#edit_Tarih").val(data.tarih);
+
+            // Alt görevleri listele
+            let altHtml = '';
+            if(data.altGorevler && data.altGorevler.length > 0) {
+                data.altGorevler.forEach(function(ag) {
+                    let checked = ag.tamamlandiMi ? 'checked' : '';
+                    let lineThrough = ag.tamamlandiMi ? 'text-slate-400 line-through' : 'text-slate-700';
+                    altHtml += `
+                    <div class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-100">
+                        <input type="checkbox" class="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
+                               ${checked} 
+                               onchange="altGorevDurumDegistir(${ag.id}, this.checked)">
+                        <span class="text-sm font-medium ${lineThrough} transition-all">${ag.baslik}</span>
+                    </div>`;
+                });
+            } else {
+                altHtml = '<p class="text-slate-400 text-xs italic">Henüz bir alt görev eklenmemiş.</p>';
+            }
+            $('#checklistContainer').html(altHtml);
+
+            // Yeni alt görev ekleme butonu için onclick metodunu ayarla (Lider için)
+            const btnEkle = document.getElementById("btnAltGorevEkle");
+            if (btnEkle) {
+                btnEkle.setAttribute("onclick", `altGorevEkle(${data.id}, this)`);
+            }
+
             $("#gorevDetayModal").modal('show');
         });
     }
+
+    // Yeni alt görev eklemek için Enter yakalama
+    $(document).on('keypress', '#yeniAltGorevBaslik', function(e) {
+        if(e.which == 13) {
+            e.preventDefault();
+            const btnEkle = document.getElementById("btnAltGorevEkle");
+            if (btnEkle) btnEkle.click();
+        }
+    });
 
     // --- GÖREV GÜNCELLE (LİDER) ---
     function ekipGorevGuncelle() {
