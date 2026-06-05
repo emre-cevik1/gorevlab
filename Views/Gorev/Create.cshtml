@@ -59,6 +59,16 @@
                                 <option value="Yüksek">🔥 Yüksek Öncelik</option>
                             </select>
                         </div>
+
+                        <div class="mb-4">
+                            <label class="form-label font-bold text-slate-800">Alt Görevler (Checklist)</label>
+                            <div id="createAltGorevList" class="space-y-2 mb-2"></div>
+                            <div class="flex gap-2">
+                                <input type="text" id="yeniCreateAltGorev" class="antigravity-input form-control text-slate-800 py-2" placeholder="Yeni alt görev yazın (Enter'a basarak ekleyebilirsiniz)...">
+                                <button type="button" onclick="createAltGorevEkle()" class="btn btn-light text-indigo-600 font-bold px-4 border border-slate-200 hover:bg-slate-50">Ekle</button>
+                            </div>
+                            <small class="text-slate-500 mt-1 d-block"><i class="bi bi-info-circle"></i> Görev detaylarında görünecek alt adımları şimdiden belirleyebilirsiniz.</small>
+                        </div>
                         <div class="flex flex-col sm:flex-row items-center justify-between mt-8 pt-6 border-t border-slate-100 gap-4">
             <a asp-action="Index" class="bg-white hover:bg-slate-50 shadow-md hover:shadow-lg rounded-full px-5 py-3 transition-all hover:-translate-y-1 text-slate-800 font-medium text-sm flex items-center gap-2 no-underline w-full sm:w-auto justify-center">
                 <i class="bi bi-arrow-left"></i> Listeye Dön
@@ -82,7 +92,36 @@
             // Formu aşağıdan yukarı doğru kaydırarak gösterme efekti
             $('.form-karti').css({ 'margin-top': '50px', 'opacity': '0', 'display': 'block' })
                 .animate({ 'margin-top': '0px', 'opacity': '1' }, 600);
+
+            // Alt görev için Enter tuşu yakalama
+            $('#yeniCreateAltGorev').keypress(function(e) {
+                if(e.which == 13) {
+                    e.preventDefault();
+                    createAltGorevEkle();
+                }
+            });
         });
+
+        function createAltGorevEkle() {
+            const baslikInput = $('#yeniCreateAltGorev');
+            const baslik = baslikInput.val().trim();
+            if(!baslik) return;
+            
+            const list = $('#createAltGorevList');
+            // Kaçış karakterlerini (xss) önlemek için basit güvenlik önlemi
+            const guvenliBaslik = $('<div>').text(baslik).html();
+            
+            const html = `
+                <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-200">
+                    <span class="text-sm font-medium text-slate-700"><i class="bi bi-circle text-slate-400 mr-2"></i>${guvenliBaslik}</span>
+                    <button type="button" onclick="$(this).parent().remove()" class="text-red-500 hover:text-red-700 p-1 border-0 bg-transparent"><i class="bi bi-trash"></i></button>
+                    <input type="hidden" name="altGorevler" value="${guvenliBaslik}" />
+                </div>
+            `;
+            list.append(html);
+            baslikInput.val('');
+            baslikInput.focus();
+        }
 
         function yeniEtiketEkle() {
             Swal.fire({

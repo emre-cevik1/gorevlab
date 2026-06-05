@@ -125,7 +125,7 @@ namespace GorevTakipSistemi.Controllers
 
             if (!GecerliSifreMi(Sifre))
             {
-                TempData["Error"] = "Şifreniz en az 8 karakter olmalı; büyük/küçük harf, rakam ve özel karakter (?, @, !, #, %, +, -, *) içermelidir.";
+                TempData["Error"] = "Şifreniz en az 8 karakter olmalı; en az 1 büyük harf ve 1 rakam içermelidir.";
                 return View();
             }
 
@@ -487,7 +487,7 @@ namespace GorevTakipSistemi.Controllers
 
             if (!GecerliSifreMi(yeniSifre))
             {
-                TempData["Error"] = "Yeni şifreniz en az 8 karakter olmalı; büyük/küçük harf, rakam ve özel karakter (?, @, !, #, %, +, -, *) içermelidir.";
+                TempData["Error"] = "Şifreniz en az 8 karakter olmalı; en az 1 büyük harf ve 1 rakam içermelidir.";
                 ViewBag.Email = email;
                 ViewBag.Kod = kod;
                 return View();
@@ -514,12 +514,8 @@ namespace GorevTakipSistemi.Controllers
         {
             if (string.IsNullOrEmpty(sifre) || sifre.Length < 8) return false;
             if (!sifre.Any(char.IsUpper)) return false;
-            if (!sifre.Any(char.IsLower)) return false;
             if (!sifre.Any(char.IsDigit)) return false;
             
-            char[] ozelKarakterler = { '?', '@', '!', '#', '%', '+', '-', '*' };
-            if (!sifre.Any(c => ozelKarakterler.Contains(c))) return false;
-
             return true;
         }
     }

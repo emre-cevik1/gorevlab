@@ -147,7 +147,7 @@ namespace GorevTakipSistemi.Controllers
             _context.AltGorevler.Add(altGorev);
             _context.SaveChanges();
             
-            return Json(new { success = true });
+            return Json(new { success = true, data = new { id = altGorev.Id, baslik = altGorev.Baslik } });
         }
 
         // --- ALT GÖREV DURUM DEĞİŞTİRME (AJAX) ---
@@ -166,7 +166,7 @@ namespace GorevTakipSistemi.Controllers
 
         // --- 6. YENİ GÖREV EKLEME İŞLEMİ (POST) ---
         [HttpPost]
-        public IActionResult Create(Gorev gorev, List<int> seciliEtiketler)
+        public IActionResult Create(Gorev gorev, List<int> seciliEtiketler, List<string> altGorevler)
         {
             string zararliKodDeseni = @"<[^>]+>"; 
             if (Regex.IsMatch(gorev.GorevAdi ?? "", zararliKodDeseni) || Regex.IsMatch(gorev.Aciklama ?? "", zararliKodDeseni))
@@ -184,6 +184,24 @@ namespace GorevTakipSistemi.Controllers
 
             _context.Gorevler.Add(gorev);
             _context.SaveChanges();
+
+            // Alt Görevleri Kaydet
+            if (altGorevler != null && altGorevler.Any())
+            {
+                foreach (var baslik in altGorevler)
+                {
+                    if (!string.IsNullOrWhiteSpace(baslik))
+                    {
+                        _context.AltGorevler.Add(new AltGorev
+                        {
+                            GorevId = gorev.Id,
+                            Baslik = baslik.Trim(),
+                            TamamlandiMi = false
+                        });
+                    }
+                }
+                _context.SaveChanges();
+            }
 
             if (gorev.KullaniciId != me)
             {

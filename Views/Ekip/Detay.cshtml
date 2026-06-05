@@ -248,6 +248,14 @@
                 <div><label class="text-xs font-bold text-slate-600 mb-1 block">Başlık</label><input type="text" id="eg_Ad" class="antigravity-input w-full"></div>
                 <div><label class="text-xs font-bold text-slate-600 mb-1 block">Açıklama</label><textarea id="eg_Aciklama" rows="3" class="antigravity-input w-full resize-none"></textarea></div>
                 <div><label class="text-xs font-bold text-slate-600 mb-1 block">Tarih</label><input type="date" id="eg_Tarih" class="antigravity-input w-full" value="@DateTime.Now.ToString("yyyy-MM-dd")"></div>
+                <div>
+                    <label class="text-xs font-bold text-slate-600 mb-1 block">Alt Görevler (Checklist)</label>
+                    <div id="eg_AltGorevList" class="space-y-2 mb-2 max-h-32 overflow-y-auto"></div>
+                    <div class="flex gap-2">
+                        <input type="text" id="eg_YeniAltGorev" class="antigravity-input w-full text-[13px]" placeholder="Alt görev başlığı (Enter ile ekle)...">
+                        <button type="button" onclick="eg_AltGorevEkle()" class="btn btn-light border border-slate-200 text-indigo-600 font-bold px-3">Ekle</button>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer border-0 p-6 pt-0"><button type="button" onclick="ekipGorevKaydet()" class="w-full antigravity-btn py-3">Görevi Yayınla</button></div>
         </div>
@@ -305,9 +313,37 @@
 
     // --- DİĞER FONKSİYONLAR ---
     function ekipGorevKaydet() {
-        const data = { ekipId: mevcutEkipId, gorevAdi: $("#eg_Ad").val(), aciklama: $("#eg_Aciklama").val(), tarih: $("#eg_Tarih").val() };
+        const altGorevInputs = $("input[name='eg_altGorevler']").map(function() { return $(this).val(); }).get();
+        const data = { ekipId: mevcutEkipId, gorevAdi: $("#eg_Ad").val(), aciklama: $("#eg_Aciklama").val(), tarih: $("#eg_Tarih").val(), altGorevler: altGorevInputs };
         if (!data.gorevAdi) { Toast.fire({ icon: 'warning', title: 'Başlık şart!' }); return; }
         $.post('/Ekip/EkipGorevEkle', data, function (res) { if (res.success) { Toast.fire({ icon: 'success', title: 'Eklendi!' }).then(() => location.reload()); } });
+    }
+
+    // Modal içindeki input'ta Enter'ı yakala
+    $('#eg_YeniAltGorev').keypress(function(e) {
+        if(e.which == 13) {
+            e.preventDefault();
+            eg_AltGorevEkle();
+        }
+    });
+
+    function eg_AltGorevEkle() {
+        const input = $('#eg_YeniAltGorev');
+        const baslik = input.val().trim();
+        if(!baslik) return;
+        
+        const guvenliBaslik = $('<div>').text(baslik).html();
+        
+        const html = `
+            <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-200">
+                <span class="text-[12px] font-medium text-slate-700"><i class="bi bi-circle text-slate-400 mr-2"></i>${guvenliBaslik}</span>
+                <button type="button" onclick="$(this).parent().remove()" class="text-red-500 hover:text-red-700 p-1 border-0 bg-transparent"><i class="bi bi-trash"></i></button>
+                <input type="hidden" name="eg_altGorevler" value="${guvenliBaslik}" />
+            </div>
+        `;
+        $('#eg_AltGorevList').append(html);
+        input.val('');
+        input.focus();
     }
 
     function gorevBitir(id) {

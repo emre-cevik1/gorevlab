@@ -503,22 +503,39 @@
         });
 
         // --- GLOBAL ALT GÖREV (CHECKLIST) FONKSİYONLARI ---
-        function altGorevEkle(gorevId) {
-            const baslik = $('#yeniAltGorevBaslik').val();
+        function altGorevEkle(gorevId, btnElement) {
+            const baslikInput = $('#yeniAltGorevBaslik');
+            const baslik = baslikInput.val();
             if (!baslik) return toastr.warning("Lütfen alt görev başlığı girin.");
+            
+            if(btnElement) $(btnElement).prop('disabled', true);
 
             $.post('/Gorev/AltGorevEkle', { gorevId: gorevId, baslik: baslik }, function (res) {
                 if (res.success) {
                     toastr.success("Alt görev eklendi.");
-                    // Detay modalini yenile (Mevcut Modal/Offcanvas mantığına göre GorevDetayGetir veya DetayGetir çağrılmalı)
-                    if(typeof gorevDetayGetir === 'function') {
-                        gorevDetayGetir(gorevId); // Index sayfasındaki fonksiyon
-                    } else if (typeof openGorevModal === 'function') {
-                        openGorevModal(gorevId); // Takvim sayfasındaki fonksiyon
+                    baslikInput.val('');
+                    
+                    const yeniHtml = `
+                    <div class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-100">
+                        <input type="checkbox" class="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
+                               onchange="altGorevDurumDegistir(${res.data.id}, this.checked)">
+                        <span class="text-sm font-medium text-slate-700 transition-all">${res.data.baslik}</span>
+                    </div>`;
+                    
+                    // Remove "Henüz eklenmemiş" text if it exists
+                    const container = $('#checklistContainer');
+                    if(container.find('p.text-slate-400').length > 0) {
+                        container.empty();
                     }
+                    container.append(yeniHtml);
+                    
                 } else {
                     toastr.error(res.message);
                 }
+                if(btnElement) $(btnElement).prop('disabled', false);
+            }).fail(function() {
+                toastr.error("Bir hata oluştu!");
+                if(btnElement) $(btnElement).prop('disabled', false);
             });
         }
 

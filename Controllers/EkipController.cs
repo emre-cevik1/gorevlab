@@ -137,7 +137,7 @@ namespace GorevTakipSistemi.Controllers
 
         // --- EKİBE GÖREV EKLEME ---
         [HttpPost]
-        public async Task<IActionResult> EkipGorevEkle(int ekipId, string gorevAdi, string aciklama, DateTime tarih)
+        public async Task<IActionResult> EkipGorevEkle(int ekipId, string gorevAdi, string aciklama, DateTime tarih, List<string> altGorevler)
         {
             var userId = HttpContext.Session.GetInt32("KullaniciId");
             if (userId == null) return Json(new { success = false, message = "Oturum kapalı." });
@@ -161,6 +161,25 @@ namespace GorevTakipSistemi.Controllers
             };
 
             _context.Gorevler.Add(yeniGorev);
+            await _context.SaveChangesAsync();
+
+            // Alt Görevleri Kaydet
+            if (altGorevler != null && altGorevler.Any())
+            {
+                foreach (var baslik in altGorevler)
+                {
+                    if (!string.IsNullOrWhiteSpace(baslik))
+                    {
+                        _context.AltGorevler.Add(new AltGorev
+                        {
+                            GorevId = yeniGorev.Id,
+                            Baslik = baslik.Trim(),
+                            TamamlandiMi = false
+                        });
+                    }
+                }
+                await _context.SaveChangesAsync();
+            }
 
             // AKTİVİTE LOGLAMA
             _context.EkipAktiviteleri.Add(new EkipAktivite {
