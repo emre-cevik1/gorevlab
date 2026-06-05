@@ -28,6 +28,8 @@ Sistem sadece bir görev takibi değil, aynı zamanda detaylı rol yönetimi, ek
 *   **✉️ SMTP E-Posta Onayı:** Kayıt olan kullanıcıların gerçekliğini doğrulamak için otomatik e-posta aktivasyon sistemi.
 *   **🛠️ Yazılımsal Bakım Modu (Soft Maintenance):** Kurucu (Owner), siteyi yayından kaldırmadan sistem üzerinden tek tıkla "Bakım Modu"na alabilir. Ziyaretçiler şık bir uyarı sayfası görürken, kurucu siteyi aktif olarak kullanıp test edebilir.
 *   **📊 Kapsamlı Log Sistemi:** Sistemdeki tüm hareketlerin, hataların ve girişlerin kaydedildiği Admin log yönetim paneli.
+*   **🔔 Gerçek Zamanlı Bildirimler (SignalR):** Yöneticilerin kullanıcılara anlık bildirim gönderebilmesi, görev atamalarında tetiklenen ve kullanıcı tarafından silinip yönetilebilen dinamik bildirim menüsü.
+*   **✅ Bireysel & Ortak Alt Görevler (Checklist):** Ekip görevlerinde ana görevin alt adımlarının (alt görevler) her bir kullanıcı tarafından kendi adına işaretlenebilmesi, kimlerin tamamladığının canlı olarak gösterilmesi.
 *   **🎫 Destek Talebi Modülü:** Kullanıcıların yöneticilerle doğrudan iletişim kurabileceği entegre ticket sistemi.
 
 ## 💻 Kullanılan Teknolojiler
