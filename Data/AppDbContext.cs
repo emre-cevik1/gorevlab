@@ -39,6 +39,13 @@ namespace GorevTakipSistemi.Data
                 .HasForeignKey(g => g.AtayanKullaniciId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // AltGorevTamamlama -> Kullanici ilişkisi (Cascade çakışmasını önlemek için Restrict yapıyoruz)
+            modelBuilder.Entity<AltGorevTamamlama>()
+                .HasOne(t => t.Kullanici)
+                .WithMany()
+                .HasForeignKey(t => t.KullaniciId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // GorevTamamlama -> Kullanici ilişkisi (Cascade çakışmasını önlemek için Restrict yapıyoruz)
             modelBuilder.Entity<GorevTamamlama>()
                 .HasOne(gt => gt.Kullanici)

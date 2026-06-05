@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GorevTakipSistemi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260605061732_AddAltGorevTamamlama")]
+    [Migration("20260605064106_AddAltGorevTamamlama")]
     partial class AddAltGorevTamamlama
     {
         /// <inheritdoc />
@@ -509,7 +509,7 @@ namespace GorevTakipSistemi.Migrations
                     b.HasOne("GorevTakipSistemi.Models.Kullanici", "Kullanici")
                         .WithMany()
                         .HasForeignKey("KullaniciId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("AltGorev");

@@ -35,7 +35,7 @@ namespace GorevTakipSistemi.Migrations
                         column: x => x.KullaniciId,
                         principalTable: "Kullanicilar",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(

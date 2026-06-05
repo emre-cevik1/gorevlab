@@ -506,7 +506,7 @@ namespace GorevTakipSistemi.Migrations
                     b.HasOne("GorevTakipSistemi.Models.Kullanici", "Kullanici")
                         .WithMany()
                         .HasForeignKey("KullaniciId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("AltGorev");
