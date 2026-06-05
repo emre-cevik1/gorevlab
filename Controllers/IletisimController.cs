@@ -30,6 +30,14 @@ public async Task<IActionResult> Gonder(string konu, string mesaj)
     int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
     if (kullaniciId == 0) return RedirectToAction("Login", "Auth");
 
+    // Güvenlik Limiti: Bir kullanıcının maksimum 5 cevapsız talebi olabilir
+    int bekleyenTalepSayisi = _context.DestekMesajlari.Count(d => d.KullaniciId == kullaniciId && d.IsCevaplandi == false);
+    if (bekleyenTalepSayisi >= 5)
+    {
+        TempData["Error"] = "Limit Aşıldı: Şu anda bekleyen 5 adet destek talebiniz bulunuyor. Taleplerinizden en az biri cevaplanana kadar yenisini gönderemezsiniz.";
+        return RedirectToAction("Index");
+    }
+
     var yeniMesaj = new DestekMesaji
     {
         KullaniciId = kullaniciId,
