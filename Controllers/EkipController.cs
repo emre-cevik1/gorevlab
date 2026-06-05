@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using GorevTakipSistemi.Hubs;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace GorevTakipSistemi.Controllers
 {
@@ -137,6 +138,7 @@ namespace GorevTakipSistemi.Controllers
 
         // --- EKİBE GÖREV EKLEME ---
         [HttpPost]
+        [EnableRateLimiting("GorevEklemeSiniri")]
         public async Task<IActionResult> EkipGorevEkle(int ekipId, string gorevAdi, string aciklama, DateTime tarih, List<string> altGorevler)
         {
             var userId = HttpContext.Session.GetInt32("KullaniciId");

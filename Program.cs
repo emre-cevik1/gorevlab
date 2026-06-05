@@ -24,6 +24,21 @@ builder.Services.AddSession(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
+// 🔥 ANTI-SPAM (HIZ SINIRLANDIRICI) SİSTEMİ
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = 429; // Too Many Requests
+    
+    // Görev ekleme için özel sınır (Dakikada en fazla 5 görev eklenebilir)
+    options.AddFixedWindowLimiter(policyName: "GorevEklemeSiniri", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 5;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0;
+    });
+});
+
 // SignalR Servisini Ekle
 builder.Services.AddSignalR();
 
@@ -77,6 +92,7 @@ app.Use(async (context, next) =>
 });
 
 app.UseRouting();
+app.UseRateLimiter(); // 🔥 Anti-Spam (Hız Sınırlandırıcı) aktif
 app.UseSession();
 
 app.UseAuthorization();

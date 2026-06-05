@@ -7,9 +7,10 @@ using System.Text.RegularExpressions;
 using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
-
+using System.Collections.Generic;
 using Microsoft.AspNetCore.SignalR;
 using GorevTakipSistemi.Hubs;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace GorevTakipSistemi.Controllers
 {
@@ -188,6 +189,7 @@ namespace GorevTakipSistemi.Controllers
 
         // --- 6. YENİ GÖREV EKLEME İŞLEMİ (POST) ---
         [HttpPost]
+        [EnableRateLimiting("GorevEklemeSiniri")]
         public IActionResult Create(Gorev gorev, List<int> seciliEtiketler, List<string> altGorevler)
         {
             string zararliKodDeseni = @"<[^>]+>"; 
