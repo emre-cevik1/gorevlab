@@ -74,5 +74,35 @@ namespace GorevTakipSistemi.Controllers
 
             return Ok();
         }
+
+        [HttpPost]
+        public IActionResult Sil(int id)
+        {
+            int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
+            var bildirim = _context.Bildirimler.FirstOrDefault(b => b.Id == id && b.KullaniciId == kullaniciId);
+            
+            if (bildirim != null)
+            {
+                _context.Bildirimler.Remove(bildirim);
+                _context.SaveChanges();
+            }
+
+            return Ok();
+        }
+
+        [HttpPost]
+        public IActionResult TumunuSil()
+        {
+            int kullaniciId = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
+            var bildirimler = _context.Bildirimler.Where(b => b.KullaniciId == kullaniciId).ToList();
+            
+            if (bildirimler.Any())
+            {
+                _context.Bildirimler.RemoveRange(bildirimler);
+                _context.SaveChanges();
+            }
+
+            return Ok();
+        }
     }
 }
