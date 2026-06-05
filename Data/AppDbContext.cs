@@ -22,6 +22,7 @@ namespace GorevTakipSistemi.Data
         
         // YENİ EKLENEN GÖREV DETAY TABLOLARI (CHECKLIST & ETİKETLER)
         public DbSet<AltGorev> AltGorevler { get; set; }
+        public DbSet<AltGorevTamamlama> AltGorevTamamlamalari { get; set; }
         public DbSet<Etiket> Etiketler { get; set; }
         public DbSet<GorevEtiket> GorevEtiketleri { get; set; }
 

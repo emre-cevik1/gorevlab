@@ -154,11 +154,33 @@ namespace GorevTakipSistemi.Controllers
         [HttpPost]
         public IActionResult AltGorevDurumDegistir(int id, bool tamamlandiMi)
         {
-            var altGorev = _context.AltGorevler.Find(id);
+            var userId = HttpContext.Session.GetInt32("KullaniciId");
+            if (userId == null) return Json(new { success = false, message = "Oturum süresi dolmuş." });
+
+            var altGorev = _context.AltGorevler.Include(a => a.Gorev).FirstOrDefault(a => a.Id == id);
             if(altGorev != null)
             {
-                altGorev.TamamlandiMi = tamamlandiMi;
-                _context.SaveChanges();
+                if (altGorev.Gorev.EkipId != null)
+                {
+                    // Ekip görevi ise her kullanıcı kendi tamamlamasını yapar
+                    var tamamlama = _context.AltGorevTamamlamalari.FirstOrDefault(t => t.AltGorevId == id && t.KullaniciId == userId.Value);
+                    if (tamamlandiMi && tamamlama == null)
+                    {
+                        _context.AltGorevTamamlamalari.Add(new AltGorevTamamlama { AltGorevId = id, KullaniciId = userId.Value });
+                    }
+                    else if (!tamamlandiMi && tamamlama != null)
+                    {
+                        _context.AltGorevTamamlamalari.Remove(tamamlama);
+                    }
+                    _context.SaveChanges();
+                }
+                else
+                {
+                    // Kişisel görev ise doğrudan durumu değiştir
+                    altGorev.TamamlandiMi = tamamlandiMi;
+                    _context.SaveChanges();
+                }
+                
                 return Json(new { success = true, gorevId = altGorev.GorevId });
             }
             return Json(new { success = false });

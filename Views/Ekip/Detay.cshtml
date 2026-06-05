@@ -316,12 +316,24 @@
                 data.altGorevler.forEach(function(ag) {
                     let checked = ag.tamamlandiMi ? 'checked' : '';
                     let lineThrough = ag.tamamlandiMi ? 'text-slate-400 line-through' : 'text-slate-700';
+                    let bitirenlerHtml = '';
+                    if(ag.tamamlayanlar && ag.tamamlayanlar.length > 0) {
+                        bitirenlerHtml = `<div class="ml-8 mt-1 flex gap-1 flex-wrap">`;
+                        ag.tamamlayanlar.forEach(isim => {
+                            bitirenlerHtml += `<span class="text-[9px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded border border-emerald-100">${isim}</span>`;
+                        });
+                        bitirenlerHtml += `</div>`;
+                    }
+
                     altHtml += `
-                    <div class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-100">
-                        <input type="checkbox" class="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
-                               ${checked} 
-                               onchange="altGorevDurumDegistir(${ag.id}, this.checked)">
-                        <span class="text-sm font-medium ${lineThrough} transition-all">${ag.baslik}</span>
+                    <div class="p-2 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-100 mb-1">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" class="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
+                                   ${checked} 
+                                   onchange="altGorevDurumDegistir(${ag.id}, this.checked)">
+                            <span class="text-sm font-medium ${lineThrough} transition-all">${ag.baslik}</span>
+                        </div>
+                        ${bitirenlerHtml}
                     </div>`;
                 });
             } else {

@@ -446,14 +446,26 @@ namespace GorevTakipSistemi.Controllers
 [HttpGet]
 public async Task<IActionResult> GorevGetir(int id)
 {
-    var gorev = await _context.Gorevler.Include(g => g.AltGorevler).Select(g => new {
-        g.Id,
-        g.GorevAdi,
-        g.Aciklama,
-        tarih = g.Tarih.ToString("yyyy-MM-dd"),
-        g.DurumAktifMi,
-        altGorevler = g.AltGorevler.Select(a => new { id = a.Id, baslik = a.Baslik, tamamlandiMi = a.TamamlandiMi }).ToList()
-    }).FirstOrDefaultAsync(x => x.Id == id);
+    var userId = HttpContext.Session.GetInt32("KullaniciId");
+    
+    var gorev = await _context.Gorevler
+        .Include(g => g.AltGorevler)
+            .ThenInclude(a => a.Tamamlamalar)
+                .ThenInclude(t => t.Kullanici)
+        .Select(g => new {
+            g.Id,
+            g.GorevAdi,
+            g.Aciklama,
+            tarih = g.Tarih.ToString("yyyy-MM-dd"),
+            g.DurumAktifMi,
+            altGorevler = g.AltGorevler.Select(a => new { 
+                id = a.Id, 
+                baslik = a.Baslik, 
+                // Eğer ekip göreviyse, giriş yapan kullanıcının kaydı var mı kontrol et, yoksa normal TamamlandiMi
+                tamamlandiMi = g.EkipId != null ? a.Tamamlamalar.Any(t => t.KullaniciId == userId) : a.TamamlandiMi,
+                tamamlayanlar = a.Tamamlamalar.Select(t => t.Kullanici.Ad).ToList()
+            }).ToList()
+        }).FirstOrDefaultAsync(x => x.Id == id);
 
     return Json(gorev);
 }

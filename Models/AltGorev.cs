@@ -19,5 +19,7 @@ namespace GorevTakipSistemi.Models
         public string Baslik { get; set; }
 
         public bool TamamlandiMi { get; set; } = false;
+
+        public virtual System.Collections.Generic.ICollection<AltGorevTamamlama> Tamamlamalar { get; set; } = new System.Collections.Generic.List<AltGorevTamamlama>();
     }
 }
