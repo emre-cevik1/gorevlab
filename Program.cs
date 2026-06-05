@@ -29,10 +29,10 @@ builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = 429; // Too Many Requests
     
-    // Görev ekleme için özel sınır (Dakikada en fazla 5 görev eklenebilir)
+    // Görev ekleme için özel sınır (Dakikada en fazla 20 görev eklenebilir)
     options.AddFixedWindowLimiter(policyName: "GorevEklemeSiniri", limiterOptions =>
     {
-        limiterOptions.PermitLimit = 5;
+        limiterOptions.PermitLimit = 20;
         limiterOptions.Window = TimeSpan.FromMinutes(1);
         limiterOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
         limiterOptions.QueueLimit = 0;
