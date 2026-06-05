@@ -138,7 +138,6 @@ namespace GorevTakipSistemi.Controllers
 
         // --- EKİBE GÖREV EKLEME ---
         [HttpPost]
-        [EnableRateLimiting("GorevEklemeSiniri")]
         public async Task<IActionResult> EkipGorevEkle(int ekipId, string gorevAdi, string aciklama, DateTime tarih, List<string> altGorevler)
         {
             var userId = HttpContext.Session.GetInt32("KullaniciId");
@@ -147,8 +146,9 @@ namespace GorevTakipSistemi.Controllers
             var liderMi = _context.EkipUyeleri.Any(u => u.EkipId == ekipId && u.KullaniciId == userId && u.Rol == "Lider");
             if (!liderMi) return Json(new { success = false, message = "Sadece ekip lideri görev atayabilir!" });
 
-            var aktifGorevSayisi = _context.Gorevler.Count(g => g.EkipId == ekipId && g.DurumAktifMi);
-            if (aktifGorevSayisi >= 50) return Json(new { success = false, message = "Bu ekibe en fazla 50 adet aktif görev eklenebilir!" });
+            // Limit Kontrolü: Toplam görev sayısı (tamamlanmış dahil) maksimum 20 olabilir
+            var toplamGorevSayisi = _context.Gorevler.Count(g => g.EkipId == ekipId);
+            if (toplamGorevSayisi >= 20) return Json(new { success = false, message = "Sistemde en fazla 20 adet görev barındırabilirsiniz. Lütfen yer açmak için eski veya tamamlanmış görevleri silin!" });
 
             var yeniGorev = new Gorev
             {

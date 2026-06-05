@@ -189,7 +189,6 @@ namespace GorevTakipSistemi.Controllers
 
         // --- 6. YENİ GÖREV EKLEME İŞLEMİ (POST) ---
         [HttpPost]
-        [EnableRateLimiting("GorevEklemeSiniri")]
         public IActionResult Create(Gorev gorev, List<int> seciliEtiketler, List<string> altGorevler)
         {
             string zararliKodDeseni = @"<[^>]+>"; 
@@ -201,11 +200,11 @@ namespace GorevTakipSistemi.Controllers
 
             int me = HttpContext.Session.GetInt32("KullaniciId") ?? 0;
             
-            // Limit Kontrolü: Kişisel görev sayısı en fazla 50 olabilir
+            // Limit Kontrolü: Kişisel görev sayısı (tamamlanmış dahil) en fazla 20 olabilir
             int currentTaskCount = _context.Gorevler.Count(g => g.KullaniciId == me && g.EkipId == null);
-            if (currentTaskCount >= 50)
+            if (currentTaskCount >= 20)
             {
-                TempData["Error"] = "Limit Aşıldı: En fazla 50 kişisel görev oluşturabilirsiniz.";
+                TempData["Error"] = "Limit Aşıldı: Sistemde en fazla 20 adet kişisel görev barındırabilirsiniz. Yeni görev ekleyebilmek için lütfen eski veya tamamlanmış görevlerinizi silin.";
                 return View(gorev);
             }
 

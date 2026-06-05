@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using GorevTakipSistemi.Data;
-using Microsoft.AspNetCore.RateLimiting;
-using System.Threading.RateLimiting;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddMemoryCache(); // 🧠 RAM tabanlı IP takibi için şart!
 builder.WebHost.ConfigureKestrel(serverOptions =>
@@ -27,20 +25,6 @@ builder.Services.AddSession(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
-// 🔥 ANTI-SPAM (HIZ SINIRLANDIRICI) SİSTEMİ
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = 429; // Too Many Requests
-    
-    // Görev ekleme için özel sınır (Dakikada en fazla 20 görev eklenebilir)
-    options.AddFixedWindowLimiter(policyName: "GorevEklemeSiniri", limiterOptions =>
-    {
-        limiterOptions.PermitLimit = 20;
-        limiterOptions.Window = TimeSpan.FromMinutes(1);
-        limiterOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
-        limiterOptions.QueueLimit = 0;
-    });
-});
 
 // SignalR Servisini Ekle
 builder.Services.AddSignalR();
@@ -95,7 +79,7 @@ app.Use(async (context, next) =>
 });
 
 app.UseRouting();
-app.UseRateLimiter(); // 🔥 Anti-Spam (Hız Sınırlandırıcı) aktif
+
 app.UseSession();
 
 app.UseAuthorization();
