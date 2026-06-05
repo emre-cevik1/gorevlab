@@ -13,10 +13,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
-// Add services to the container.
-builder.Services.AddControllersWithViews(options =>
+// Controller'lar ve view'ler için eklemeler (Tüm projeyi Global Filtrelerle sarmala)
+builder.Services.AddControllersWithViews(options => 
 {
-    options.Filters.Add(new GorevTakipSistemi.Filters.BakimModuFilter());
+    options.Filters.Add<GorevTakipSistemi.Filters.BakimModuFilter>();
+    options.Filters.Add<GorevTakipSistemi.Filters.IslemLogFilter>(); // <-- YENI EKLENDI
 });
 builder.Services.AddSession(options =>
 {
